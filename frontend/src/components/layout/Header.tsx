@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Github, Menu } from "lucide-react";
+import { Menu, Network, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useChatStore } from "@/stores/chatStore";
@@ -9,71 +9,47 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar }: HeaderProps) {
-  const { currentSessionId, sessions } = useChatStore();
-  const [starCount, setStarCount] = React.useState<number | null>(null);
+  const { currentSessionId, sessions, isStreaming } = useChatStore();
   const currentSession = React.useMemo(
     () => sessions.find((session) => session.id === currentSessionId),
     [sessions, currentSessionId]
   );
 
-  React.useEffect(() => {
-    let active = true;
-    fetch("https://api.github.com/repos/nageoffer/ragent")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!active) return;
-        const count = typeof data?.stargazers_count === "number" ? data.stargazers_count : null;
-        setStarCount(count);
-      })
-      .catch(() => {
-        if (active) {
-          setStarCount(null);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const starLabel = React.useMemo(() => {
-    if (starCount === null) return "--";
-    if (starCount < 1000) return String(starCount);
-    const rounded = Math.round((starCount / 1000) * 10) / 10;
-    const text = String(rounded).replace(/\.0$/, "");
-    return `${text}k`;
-  }, [starCount]);
-
   return (
-    <header className="sticky top-0 z-20 bg-white">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-20 border-b border-[oklch(0.88_0.012_250)]/70 bg-[oklch(0.975_0.006_250)]/88 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
             aria-label="切换侧边栏"
-            className="text-gray-500 hover:bg-gray-100 lg:hidden"
+            className="h-10 w-10 rounded-2xl text-[oklch(0.42_0.035_250)] transition hover:bg-[oklch(0.93_0.014_250)] lg:hidden"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <p className="text-base font-medium text-gray-900">
-            {currentSession?.title || "新对话"}
-          </p>
+          <div className="hidden h-9 w-9 items-center justify-center rounded-2xl border border-[oklch(0.88_0.012_250)] bg-[oklch(0.99_0.004_250)] text-[oklch(0.48_0.13_245)] shadow-[0_10px_28px_rgba(31,41,55,0.06)] sm:flex">
+            <Network className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold tracking-[-0.01em] text-[oklch(0.22_0.018_250)] sm:text-base">
+              {currentSession?.title || "新的知识对话"}
+            </p>
+            <p className="mt-0.5 hidden text-xs text-[oklch(0.52_0.025_250)] sm:block">
+              Ragent 会基于可检索知识给出可追溯回答
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://github.com/nageoffer/ragent"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-            aria-label="打开 GitHub 仓库"
-          >
-            <Github className="h-4 w-4" />
-            <span className="font-medium">Star</span>
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-              {starLabel}
-            </span>
-          </a>
+        <div className="flex items-center gap-2 rounded-2xl border border-[oklch(0.88_0.012_250)] bg-[oklch(0.99_0.004_250)] px-3 py-2 text-xs font-medium text-[oklch(0.42_0.035_250)] shadow-[0_10px_28px_rgba(31,41,55,0.05)]">
+          <span
+            className={
+              isStreaming
+                ? "h-2 w-2 rounded-full bg-[oklch(0.7_0.15_155)] animate-pulse-soft"
+                : "h-2 w-2 rounded-full bg-[oklch(0.65_0.08_155)]"
+            }
+          />
+          <ShieldCheck className="hidden h-4 w-4 text-[oklch(0.54_0.12_155)] sm:block" />
+          <span>{isStreaming ? "生成中" : "安全会话"}</span>
         </div>
       </div>
     </header>

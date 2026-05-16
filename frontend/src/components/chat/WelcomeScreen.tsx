@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowUpRight, BookOpen, Bot, Brain, Check, Lightbulb, Send, Square } from "lucide-react";
+import { ArrowUpRight, BookOpen, Brain, Check, Lightbulb, Orbit, Send, Square } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { listSampleQuestions } from "@/services/sampleQuestionService";
@@ -17,21 +17,21 @@ const PRESET_ICONS = [BookOpen, Check, Lightbulb];
 
 const DEFAULT_PRESETS: PromptPreset[] = [
   {
-    title: "内容总结",
-    description: "提炼 3-5 条关键信息与行动点",
-    prompt: "请帮我总结以下内容，并列出3-5条要点：",
+    title: "快速归纳",
+    description: "从长内容中抽取结论、风险与下一步",
+    prompt: "请阅读以下内容，提炼核心结论、关键风险和下一步建议：",
     icon: BookOpen
   },
   {
-    title: "任务拆解",
-    description: "把目标拆成可执行步骤与优先级",
-    prompt: "请把下面需求拆解为步骤，并给出优先级和里程碑：",
+    title: "方案推演",
+    description: "把目标拆成路径、依赖与优先级",
+    prompt: "请围绕下面目标给出可执行方案，包含步骤、依赖、优先级和验收标准：",
     icon: Check
   },
   {
-    title: "灵感扩展",
-    description: "给出多个方案并比较优缺点",
-    prompt: "围绕以下主题给出5-8个方案，并注明优缺点：",
+    title: "知识追问",
+    description: "基于已有资料继续延展与对比",
+    prompt: "请基于相关知识库回答下面问题，并说明依据与不确定点：",
     icon: Lightbulb
   }
 ];
@@ -68,9 +68,7 @@ export function WelcomeScreen() {
 
     const loadPresets = async () => {
       const data = await listSampleQuestions().catch(() => null);
-      if (!active || !data || data.length === 0) {
-        return;
-      }
+      if (!active || !data || data.length === 0) return;
       const mapped = data
         .filter((item) => item.question && item.question.trim())
         .slice(0, 3)
@@ -80,7 +78,7 @@ export function WelcomeScreen() {
             item.title?.trim() ||
             (question.length > 12 ? `${question.slice(0, 12)}...` : question) ||
             `推荐问法 ${index + 1}`;
-          const description = item.description?.trim() || "直接点选即可开始对话";
+          const description = item.description?.trim() || "点选后可直接开始对话";
           return {
             id: item.id,
             title,
@@ -89,9 +87,7 @@ export function WelcomeScreen() {
             icon: PRESET_ICONS[index % PRESET_ICONS.length]
           };
         });
-      if (mapped.length > 0) {
-        setPromptPresets(mapped);
-      }
+      if (mapped.length > 0) setPromptPresets(mapped);
     };
 
     loadPresets();
@@ -126,156 +122,126 @@ export function WelcomeScreen() {
   const hasContent = value.trim().length > 0;
 
   return (
-    <div className="relative flex min-h-full items-center justify-center overflow-hidden px-4 py-16 sm:px-6">
+    <div className="relative flex min-h-full items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:py-14">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#F8FAFC] via-white to-[#EFF6FF]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,oklch(0.9_0.055_205/.85),transparent_24%),radial-gradient(circle_at_88%_10%,oklch(0.93_0.075_76/.72),transparent_25%),linear-gradient(140deg,oklch(0.98_0.005_250),oklch(0.94_0.012_250))]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-40 [background-size:40px_40px]"
+        className="pointer-events-none absolute inset-0 opacity-[0.34] [background-image:linear-gradient(oklch(0.2_0.02_250/.06)_1px,transparent_1px),linear-gradient(90deg,oklch(0.2_0.02_250/.06)_1px,transparent_1px)] [background-size:42px_42px]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-32 right-[-40px] h-72 w-72 rounded-full bg-gradient-radial from-[#BFDBFE]/60 via-transparent to-transparent blur-3xl animate-float"
+        className="pointer-events-none absolute left-[8%] top-[15%] hidden h-48 w-48 rotate-12 border border-[oklch(0.75_0.055_225)]/50 lg:block"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-36 left-[-80px] h-80 w-80 rounded-full bg-gradient-radial from-[#FDE68A]/40 via-transparent to-transparent blur-3xl animate-float"
+        className="pointer-events-none absolute bottom-[11%] right-[7%] hidden h-32 w-32 rounded-full border border-[oklch(0.78_0.055_78)]/60 lg:block"
       />
 
-      <div className="relative w-full max-w-[860px]">
-        <div
-          className="text-center opacity-0 animate-fade-up"
-          style={{ animationFillMode: "both" }}
-        >
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-medium text-[#2563EB] shadow-sm">
-            <Bot className="h-3.5 w-3.5" />
-            RAG 智能问答
-          </span>
-          <h1 className="mt-4 font-display text-4xl leading-tight tracking-tight text-[#111827] sm:text-5xl md:text-6xl">
-            把问题变成
-            <span className="text-gradient">清晰答案</span>
-          </h1>
-          <p className="mt-4 text-base text-[#4B5563] sm:text-lg">
-            结构化提问、知识检索与深度思考，一次对话给出可执行方案
-          </p>
-        </div>
-
-        <div
-          className="mt-10 opacity-0 animate-fade-up"
-          style={{ animationDelay: "80ms", animationFillMode: "both" }}
-        >
-          <div
-            className={cn(
-              "relative flex flex-col rounded-3xl border border-white/70 bg-white/80 px-5 pt-4 pb-3 shadow-soft backdrop-blur-xl transition-all duration-200",
-              isFocused
-                ? "border-[#BFDBFE] shadow-glow"
-                : "hover:border-[#D4D4D4]"
-            )}
-          >
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                placeholder={deepThinkingEnabled ? "输入需要深度分析的问题..." : "输入你的问题..."}
-                className="max-h-40 min-h-[52px] w-full resize-none border-0 bg-transparent px-2 pt-2 pb-2 text-[15px] text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none sm:text-base"
-                rows={1}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                onCompositionStart={() => {
-                  isComposingRef.current = true;
-                }}
-                onCompositionEnd={() => {
-                  isComposingRef.current = false;
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    const nativeEvent = event.nativeEvent as KeyboardEvent;
-                    if (nativeEvent.isComposing || isComposingRef.current || nativeEvent.keyCode === 229) {
-                      return;
-                    }
-                    event.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                aria-label="发送消息"
-              />
-              <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[10px] bg-gradient-to-b from-white/0 via-white/40 to-white/90" />
+      <div className="relative w-full max-w-[1040px]">
+        <div className="grid items-end gap-8 lg:grid-cols-[1.04fr_0.96fr]">
+          <div className="opacity-0 animate-fade-up" style={{ animationFillMode: "both" }}>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-[oklch(0.84_0.02_225)] bg-[oklch(0.99_0.004_250)]/70 px-3 py-2 text-xs font-semibold tracking-[0.14em] text-[oklch(0.48_0.13_245)] shadow-[0_12px_32px_rgba(31,41,55,0.06)] backdrop-blur-xl">
+              <Orbit className="h-4 w-4" />
+              KNOWLEDGE ORBIT
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                disabled={isStreaming}
-                aria-pressed={deepThinkingEnabled}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                  deepThinkingEnabled
-                    ? "border-[#BFDBFE] bg-[#DBEAFE] text-[#2563EB]"
-                    : "border-transparent bg-[#F5F5F5] text-[#6B7280] hover:bg-[#EEEEEE]",
-                  isStreaming && "cursor-not-allowed opacity-60"
-                )}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <Brain className={cn("h-3.5 w-3.5", deepThinkingEnabled && "text-[#3B82F6]")} />
-                  深度思考
-                  {deepThinkingEnabled ? (
-                    <span className="h-2 w-2 rounded-full bg-[#3B82F6] animate-pulse" />
-                  ) : null}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!hasContent && !isStreaming}
-                aria-label={isStreaming ? "停止生成" : "发送消息"}
-                className={cn(
-                  "ml-auto inline-flex items-center justify-center rounded-full p-2.5 transition-all duration-200",
-                  isStreaming
-                    ? "bg-[#FEE2E2] text-[#EF4444] hover:bg-[#FECACA]"
-                    : hasContent
-                      ? "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
-                      : "cursor-not-allowed bg-[#F5F5F5] text-[#CCCCCC]"
-                )}
-              >
-                {isStreaming ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-          {deepThinkingEnabled ? (
-            <p className="mt-3 text-xs text-[#2563EB]">
-              <span className="inline-flex items-center gap-1.5">
-                <Lightbulb className="h-3.5 w-3.5" />
-                深度思考模式已开启，AI将进行更深入的分析推理
-              </span>
+            <h1 className="mt-6 max-w-[680px] text-balance font-display text-[clamp(3rem,7vw,6.6rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[oklch(0.2_0.02_250)]">
+              让知识先抵达，再回答。
+            </h1>
+            <p className="mt-6 max-w-[58ch] text-base leading-7 text-[oklch(0.43_0.03_250)] sm:text-lg">
+              Ragent 将检索、推理与表达收束到一次对话里。适合制度问答、资料总结、业务知识追问和复杂问题拆解。
             </p>
-          ) : null}
-          <p className="mt-3 text-center text-xs text-[#94A3B8]">
-            <kbd className="rounded bg-white/80 px-1.5 py-0.5 text-[#6B7280] shadow-sm">
-              Enter
-            </kbd>{" "}
-            发送
-            <span className="px-1.5">·</span>
-            <kbd className="rounded bg-white/80 px-1.5 py-0.5 text-[#6B7280] shadow-sm">
-              Shift + Enter
-            </kbd>{" "}
-            换行
-            {isStreaming ? <span className="ml-2 animate-pulse-soft">生成中...</span> : null}
-          </p>
+          </div>
+
+          <div className="opacity-0 animate-fade-up" style={{ animationDelay: "90ms", animationFillMode: "both" }}>
+            <div
+              className={cn(
+                "relative overflow-hidden rounded-[2rem] border bg-[oklch(0.995_0.004_250)]/82 p-2 shadow-[0_30px_80px_rgba(31,41,55,0.16)] backdrop-blur-xl transition duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                isFocused ? "border-[oklch(0.72_0.08_245)]" : "border-[oklch(0.88_0.012_250)]"
+              )}
+            >
+              <div className="rounded-[1.55rem] border border-[oklch(0.9_0.01_250)] bg-[oklch(0.99_0.004_250)] p-4 shadow-[inset_0_1px_0_oklch(1_0_0/.8)]">
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={value}
+                    onChange={(event) => setValue(event.target.value)}
+                    placeholder={deepThinkingEnabled ? "输入需要深度分析的问题..." : "输入你的问题..."}
+                    className="max-h-40 min-h-[104px] w-full resize-none border-0 bg-transparent px-1 py-1 text-base leading-7 text-[oklch(0.24_0.02_250)] placeholder:text-[oklch(0.62_0.025_250)] focus:outline-none"
+                    rows={3}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    onCompositionStart={() => {
+                      isComposingRef.current = true;
+                    }}
+                    onCompositionEnd={() => {
+                      isComposingRef.current = false;
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        const nativeEvent = event.nativeEvent as KeyboardEvent;
+                        if (nativeEvent.isComposing || isComposingRef.current || nativeEvent.keyCode === 229) return;
+                        event.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                    aria-label="发送消息"
+                  />
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[16px] bg-gradient-to-b from-[oklch(0.99_0.004_250)]/0 to-[oklch(0.99_0.004_250)]" />
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[oklch(0.9_0.01_250)] pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                    disabled={isStreaming}
+                    aria-pressed={deepThinkingEnabled}
+                    className={cn(
+                      "rounded-xl border px-3 py-2 text-xs font-semibold transition duration-200 active:scale-[0.98]",
+                      deepThinkingEnabled
+                        ? "border-[oklch(0.76_0.065_245)] bg-[oklch(0.92_0.04_225)] text-[oklch(0.42_0.13_245)]"
+                        : "border-[oklch(0.88_0.012_250)] bg-[oklch(0.965_0.007_250)] text-[oklch(0.44_0.025_250)] hover:bg-[oklch(0.94_0.01_250)]",
+                      isStreaming && "cursor-not-allowed opacity-60"
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Brain className="h-4 w-4" />
+                      深度思考
+                      {deepThinkingEnabled ? <span className="h-2 w-2 rounded-full bg-[oklch(0.54_0.14_245)] animate-pulse" /> : null}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!hasContent && !isStreaming}
+                    aria-label={isStreaming ? "停止生成" : "发送消息"}
+                    className={cn(
+                      "ml-auto inline-flex h-11 min-w-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
+                      isStreaming
+                        ? "bg-[oklch(0.93_0.05_25)] text-[oklch(0.58_0.18_25)] hover:bg-[oklch(0.89_0.07_25)]"
+                        : hasContent
+                          ? "bg-[oklch(0.25_0.045_250)] text-[oklch(0.98_0.004_250)] hover:bg-[oklch(0.31_0.05_250)]"
+                          : "cursor-not-allowed bg-[oklch(0.92_0.01_250)] text-[oklch(0.68_0.02_250)]"
+                    )}
+                  >
+                    {isStreaming ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+                    <span className="ml-2 hidden sm:inline">{isStreaming ? "停止" : "发送"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p className="mt-3 text-center text-xs text-[oklch(0.56_0.025_250)]">
+              <kbd className="rounded-md border border-[oklch(0.88_0.012_250)] bg-[oklch(0.99_0.004_250)] px-1.5 py-0.5 text-[oklch(0.42_0.03_250)]">Enter</kbd> 发送
+              <span className="px-1.5">·</span>
+              <kbd className="rounded-md border border-[oklch(0.88_0.012_250)] bg-[oklch(0.99_0.004_250)] px-1.5 py-0.5 text-[oklch(0.42_0.03_250)]">Shift + Enter</kbd> 换行
+              {isStreaming ? <span className="ml-2 animate-pulse-soft">生成中...</span> : null}
+            </p>
+          </div>
         </div>
 
-        <div
-          className="mt-10 opacity-0 animate-fade-up"
-          style={{ animationDelay: "160ms", animationFillMode: "both" }}
-        >
-          <div className="flex items-center justify-center gap-2 text-xs uppercase tracking-[0.24em] text-[#94A3B8]">
-            <span className="h-px w-8 bg-[#E5E7EB]" />
-            试试这些开场
-            <span className="h-px w-8 bg-[#E5E7EB]" />
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 opacity-0 animate-fade-up" style={{ animationDelay: "170ms", animationFillMode: "both" }}>
+          <div className="grid gap-3 lg:grid-cols-3">
             {promptPresets.map((preset) => {
               const Icon = preset.icon;
               return (
@@ -285,22 +251,22 @@ export function WelcomeScreen() {
                   onClick={() => applyPreset(preset.prompt)}
                   disabled={isStreaming}
                   className={cn(
-                    "group rounded-2xl border border-white/70 bg-white/70 p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#BFDBFE] hover:shadow-md",
+                    "group rounded-[1.45rem] border border-[oklch(0.88_0.012_250)] bg-[oklch(0.99_0.004_250)]/72 p-4 text-left shadow-[0_14px_36px_rgba(31,41,55,0.06)] backdrop-blur-xl transition duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-[oklch(0.76_0.065_245)] hover:bg-[oklch(0.995_0.004_250)]",
                     isStreaming && "cursor-not-allowed opacity-60"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EFF6FF] text-[#2563EB]">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-[oklch(0.92_0.035_225)] text-[oklch(0.42_0.13_245)]">
                       <Icon className="h-4 w-4" />
                     </span>
-                    <div>
-                      <p className="text-sm font-semibold text-[#1F2937]">{preset.title}</p>
-                      <p className="text-xs text-[#6B7280]">{preset.description}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[oklch(0.24_0.02_250)]">{preset.title}</p>
+                      <p className="truncate text-xs text-[oklch(0.5_0.025_250)]">{preset.description}</p>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-2 text-xs text-[#94A3B8]">
-                    <span className="min-w-0 flex-1 truncate">推荐问法：{preset.prompt}</span>
-                    <ArrowUpRight className="h-3.5 w-3.5 text-[#CBD5F5] transition-colors group-hover:text-[#3B82F6]" />
+                  <div className="mt-4 flex items-center gap-2 text-xs text-[oklch(0.56_0.025_250)]">
+                    <span className="min-w-0 flex-1 truncate">{preset.prompt}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 text-[oklch(0.65_0.06_245)] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </div>
                 </button>
               );

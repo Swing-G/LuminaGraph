@@ -51,15 +51,9 @@ export function ChatPage() {
       selectSession(sessionId).catch(() => null);
       return;
     }
-    if (!sessionsReady) {
-      return;
-    }
-    if (isCreatingNew) {
-      return;
-    }
-    if (currentSessionId) {
-      return;
-    }
+    if (!sessionsReady) return;
+    if (isCreatingNew) return;
+    if (currentSessionId) return;
     createSession().catch(() => null);
   }, [
     sessionId,
@@ -80,8 +74,8 @@ export function ChatPage() {
 
   return (
     <MainLayout>
-      <div className="flex h-full flex-col bg-white">
-        <div className="flex-1 min-h-0">
+      <div className="flex h-full flex-col bg-transparent">
+        <div className="min-h-0 flex-1">
           <MessageList
             messages={messages}
             isLoading={isLoading}
@@ -90,8 +84,8 @@ export function ChatPage() {
           />
         </div>
         {showWelcome ? null : (
-          <div className="relative z-20 bg-white">
-            <div className="mx-auto max-w-[800px] px-6 pt-1 pb-4">
+          <div className="relative z-20 border-t border-[oklch(0.88_0.012_250)]/70 bg-[oklch(0.985_0.004_250)]/88 backdrop-blur-xl">
+            <div className="mx-auto max-w-[820px] px-4 pt-3 pb-4 sm:px-6">
               <ChatInput />
             </div>
           </div>

@@ -1,18 +1,6 @@
 import * as React from "react";
 import { differenceInCalendarDays, isValid } from "date-fns";
-import {
-  BookOpen,
-  Bot,
-  LogOut,
-  MessageSquare,
-  MoreHorizontal,
-  Pencil,
-  PlayCircle,
-  Plus,
-  Search,
-  Settings,
-  Trash2
-} from "lucide-react";
+import { Bot, LogOut, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -213,19 +201,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <span className="block text-xs text-[#94A3B8]">从空白开始</span>
                 </span>
               </button>
-              {user?.role === "admin" ? (
-                <button
-                  type="button"
-                  className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#1D4ED8] transition-colors hover:bg-white"
-                  onClick={() => {
-                    window.open("/admin", "_blank");
-                    onClose();
-                  }}
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  管理后台
-                </button>
-              ) : null}
             </div>
           </div>
           <div className="rounded-2xl border border-[#E6EEF6] bg-white p-3 shadow-[0_12px_26px_rgba(15,23,42,0.06)]">
@@ -411,28 +386,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://nageoffer.com/ragent"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center"
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  官方文档
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a
-                  href="https://space.bilibili.com/352177376"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center"
-                >
-                  <PlayCircle className="mr-2 h-4 w-4" />
-                  哔哩哔哩
-                </a>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => logout()} className="text-rose-600 focus:text-rose-600">
                 <LogOut className="mr-2 h-4 w-4" />
                 退出登录
