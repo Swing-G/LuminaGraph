@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Brain, Lightbulb, Send, Square } from "lucide-react";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/chatStore";
@@ -16,6 +17,8 @@ export function ChatInput() {
     cancelGeneration,
     deepThinkingEnabled,
     setDeepThinkingEnabled,
+    chatMode,
+    setChatMode,
     inputFocusKey
   } = useChatStore();
 
@@ -98,14 +101,25 @@ export function ChatInput() {
           />
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[10px] bg-gradient-to-b from-white/0 via-white/40 to-white/90" />
         </div>
-        <div className="relative mt-2 flex items-center">
+        <div className="relative mt-2 flex flex-wrap items-center gap-2">
+          <Select value={chatMode} onValueChange={setChatMode} disabled={isStreaming}>
+            <SelectTrigger className="h-8 w-[128px] rounded-lg border-[#E5E5E5] bg-[#F7F7F7] text-xs text-[#555555] shadow-none">
+              <SelectValue placeholder="选择模式" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="RAG">RAG 知识库</SelectItem>
+              <SelectItem value="WORKFLOW">Workflow</SelectItem>
+              <SelectItem value="REACT">ReAct 预留</SelectItem>
+              <SelectItem value="PAE">PAE 预留</SelectItem>
+            </SelectContent>
+          </Select>
           <button
             type="button"
             onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
             disabled={isStreaming}
             aria-pressed={deepThinkingEnabled}
             className={cn(
-              "absolute left-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
+              "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
               deepThinkingEnabled
                 ? "border-[#BFDBFE] bg-[#DBEAFE] text-[#2563EB]"
                 : "border-transparent bg-[#F5F5F5] text-[#999999] hover:bg-[#EEEEEE]",

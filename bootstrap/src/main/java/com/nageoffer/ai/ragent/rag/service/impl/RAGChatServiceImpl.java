@@ -23,9 +23,11 @@ import com.nageoffer.ai.ragent.framework.context.UserContext;
 import com.nageoffer.ai.ragent.framework.trace.RagTraceContext;
 import com.nageoffer.ai.ragent.infra.chat.StreamCallback;
 import com.nageoffer.ai.ragent.rag.aop.ChatRateLimit;
+import com.nageoffer.ai.ragent.rag.enums.ChatMode;
 import com.nageoffer.ai.ragent.rag.service.RAGChatService;
 import com.nageoffer.ai.ragent.rag.service.handler.StreamCallbackFactory;
 import com.nageoffer.ai.ragent.rag.service.handler.StreamTaskManager;
+import com.nageoffer.ai.ragent.rag.service.workflow.WorkflowChatRouter;
 import com.nageoffer.ai.ragent.rag.service.pipeline.StreamChatContext;
 import com.nageoffer.ai.ragent.rag.service.pipeline.StreamChatPipeline;
 import lombok.RequiredArgsConstructor;
@@ -44,18 +46,30 @@ public class RAGChatServiceImpl implements RAGChatService {
     private final StreamChatPipeline chatPipeline;
     private final StreamCallbackFactory callbackFactory;
     private final StreamTaskManager taskManager;
+    private final WorkflowChatRouter workflowChatRouter;
 
     @Override
     @ChatRateLimit
-    public void streamChat(String question, String conversationId, Boolean deepThinking, SseEmitter emitter) {
+    public void streamChat(String question, String conversationId, Boolean deepThinking, ChatMode mode, SseEmitter emitter) {
         String actualConversationId = StrUtil.isBlank(conversationId) ? IdUtil.getSnowflakeNextIdStr() : conversationId;
         String taskId = StrUtil.isBlank(RagTraceContext.getTaskId())
                 ? IdUtil.getSnowflakeNextIdStr()
                 : RagTraceContext.getTaskId();
-        log.info("开始流式对话，会话ID：{}，任务ID：{}", actualConversationId, taskId);
+        ChatMode actualMode = mode == null ? ChatMode.RAG : mode;
+        log.info("开始流式对话，会话ID：{}，任务ID：{}，模式：{}", actualConversationId, taskId, actualMode);
         boolean thinkingEnabled = Boolean.TRUE.equals(deepThinking);
 
         StreamCallback callback = callbackFactory.createChatEventHandler(emitter, actualConversationId, taskId);
+
+        if (actualMode == ChatMode.WORKFLOW) {
+            workflowChatRouter.handle(question, actualConversationId, UserContext.getUserId(), callback);
+            return;
+        }
+        if (actualMode == ChatMode.REACT || actualMode == ChatMode.PAE) {
+            callback.onContent(actualMode.name() + " 模式接口已预留，当前版本暂未实现执行器。你可以先切换到 RAG 或 Workflow 模式测试完整链路。");
+            callback.onComplete();
+            return;
+        }
 
         StreamChatContext ctx = StreamChatContext.builder()
                 .question(question)

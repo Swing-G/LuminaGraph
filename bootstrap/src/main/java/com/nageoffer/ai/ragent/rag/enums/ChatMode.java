@@ -15,28 +15,28 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.rag.enums;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.util.StringUtils;
 
 /**
- * Ragent 核心应用启动类
+ * 对话执行模式
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+public enum ChatMode {
+    RAG,
+    WORKFLOW,
+    REACT,
+    PAE;
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
+    public static ChatMode of(String value) {
+        if (!StringUtils.hasText(value)) {
+            return RAG;
+        }
+        for (ChatMode mode : values()) {
+            if (mode.name().equalsIgnoreCase(value)) {
+                return mode;
+            }
+        }
+        return RAG;
     }
 }

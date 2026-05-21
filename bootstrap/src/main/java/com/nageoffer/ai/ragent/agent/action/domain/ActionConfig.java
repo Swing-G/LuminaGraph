@@ -15,28 +15,28 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.agent.action.domain;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Ragent 核心应用启动类
+ * Agent Action配置
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ActionConfig {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
-    }
+    private String actionType;
+
+    private JsonNode config;
+
+    private JsonNode inputMapping;
+
+    private JsonNode outputMapping;
 }

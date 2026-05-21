@@ -128,6 +128,11 @@ const menuGroups: MenuGroup[] = [
         label: "链路追踪",
         icon: Workflow
       },
+      {
+        path: "/admin/workflows",
+        label: "Workflow 调试台",
+        icon: GitBranch
+      },
     ]
   },
   {
@@ -159,6 +164,7 @@ const breadcrumbMap: Record<string, string> = {
   "intent-list": "意图列表",
   ingestion: "数据通道",
   traces: "链路追踪",
+  workflows: "Workflow 调试台",
   "sample-questions": "示例问题",
   mappings: "关键词映射",
   settings: "系统设置",

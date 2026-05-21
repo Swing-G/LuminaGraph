@@ -15,28 +15,30 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.agent.workflow.domain;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.nageoffer.ai.ragent.agent.workflow.dao.entity.AgentWorkflowDefinitionDO;
+import com.nageoffer.ai.ragent.agent.workflow.dao.entity.AgentWorkflowEdgeDO;
+import com.nageoffer.ai.ragent.agent.workflow.dao.entity.AgentWorkflowNodeDO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
- * Ragent 核心应用启动类
+ * Agent Workflow定义快照
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AgentWorkflowDefinition {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
-    }
+    private AgentWorkflowDefinitionDO workflow;
+
+    private List<AgentWorkflowNodeDO> nodes;
+
+    private List<AgentWorkflowEdgeDO> edges;
 }

@@ -15,28 +15,49 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.agent.workflow.controller.vo;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Data;
+
+import java.util.Date;
+import java.util.List;
 
 /**
- * Ragent 核心应用启动类
+ * Agent Workflow定义视图
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+@Data
+public class AgentWorkflowVO {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
-    }
+    private String id;
+
+    private String name;
+
+    private String description;
+
+    private String workflowType;
+
+    private String harnessType;
+
+    private Integer version;
+
+    private String status;
+
+    private JsonNode inputSchema;
+
+    private JsonNode outputSchema;
+
+    private JsonNode config;
+
+    private String createdBy;
+
+    private String updatedBy;
+
+    private Date createTime;
+
+    private Date updateTime;
+
+    private List<AgentWorkflowNodeVO> nodes;
+
+    private List<AgentWorkflowEdgeVO> edges;
 }

@@ -15,28 +15,20 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.agent.workflow.controller.request;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Data;
 
 /**
- * Ragent 核心应用启动类
+ * Agent Workflow运行请求
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+@Data
+public class AgentWorkflowRunRequest {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
-    }
+    private String businessType;
+
+    private String businessId;
+
+    private JsonNode input;
 }

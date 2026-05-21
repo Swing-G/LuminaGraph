@@ -15,28 +15,17 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
-
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+package com.nageoffer.ai.ragent.agent.action.enums;
 
 /**
- * Ragent 核心应用启动类
+ * Agent动作类型
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
-    }
+public enum ActionType {
+    NOOP,
+    LLM,
+    RAG_RETRIEVE,
+    TICKET_TRIAGE,
+    TICKET_ACCOUNT_ANALYSIS,
+    MCP_TOOL,
+    CONDITION
 }

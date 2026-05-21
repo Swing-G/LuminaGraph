@@ -13,6 +13,8 @@ import { buildQuery } from "@/utils/helpers";
 import { createStreamResponse } from "@/hooks/useStreamResponse";
 import { storage } from "@/utils/storage";
 
+type ChatMode = "RAG" | "WORKFLOW" | "REACT" | "PAE";
+
 interface ChatState {
   sessions: Session[];
   currentSessionId: string | null;
@@ -23,6 +25,7 @@ interface ChatState {
   isStreaming: boolean;
   isCreatingNew: boolean;
   deepThinkingEnabled: boolean;
+  chatMode: ChatMode;
   thinkingStartAt: number | null;
   streamTaskId: string | null;
   streamAbort: (() => void) | null;
@@ -35,6 +38,7 @@ interface ChatState {
   selectSession: (sessionId: string) => Promise<void>;
   updateSessionTitle: (sessionId: string, title: string) => void;
   setDeepThinkingEnabled: (enabled: boolean) => void;
+  setChatMode: (mode: ChatMode) => void;
   sendMessage: (content: string) => Promise<void>;
   cancelGeneration: () => void;
   appendStreamContent: (delta: string) => void;
@@ -81,6 +85,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   isCreatingNew: false,
   deepThinkingEnabled: false,
+  chatMode: "RAG",
   thinkingStartAt: null,
   streamTaskId: null,
   streamAbort: null,
@@ -221,11 +226,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setDeepThinkingEnabled: (enabled) => {
     set({ deepThinkingEnabled: enabled });
   },
+  setChatMode: (mode) => {
+    set({ chatMode: mode });
+  },
   sendMessage: async (content) => {
     const trimmed = content.trim();
     if (!trimmed) return;
     if (get().isStreaming) return;
     const deepThinkingEnabled = get().deepThinkingEnabled;
+    const chatMode = get().chatMode;
     const inputFocusKey = Date.now();
 
     const userMessage: Message = {
@@ -262,7 +271,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const query = buildQuery({
       question: trimmed,
       conversationId: conversationId || undefined,
-      deepThinking: deepThinkingEnabled ? true : undefined
+      deepThinking: deepThinkingEnabled ? true : undefined,
+      mode: chatMode
     });
     const url = `${API_BASE_URL}/rag/v3/chat${query}`;
     const token = storage.getToken();

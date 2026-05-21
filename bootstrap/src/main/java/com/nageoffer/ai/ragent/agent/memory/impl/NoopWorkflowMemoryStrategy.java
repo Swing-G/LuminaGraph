@@ -15,28 +15,27 @@
  * limitations under the License.
  */
 
-package com.nageoffer.ai.ragent;
+package com.nageoffer.ai.ragent.agent.memory.impl;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.nageoffer.ai.ragent.agent.memory.core.WorkflowMemoryStrategy;
+import com.nageoffer.ai.ragent.agent.memory.domain.WorkflowMemoryContext;
+import com.nageoffer.ai.ragent.agent.memory.domain.WorkflowMemoryResult;
+import com.nageoffer.ai.ragent.agent.memory.enums.WorkflowMemoryStrategyType;
+import org.springframework.stereotype.Component;
 
 /**
- * Ragent 核心应用启动类
+ * 空Workflow记忆策略
  */
-@SpringBootApplication
-@EnableScheduling
-@MapperScan(basePackages = {
-        "com.nageoffer.ai.ragent.rag.dao.mapper",
-        "com.nageoffer.ai.ragent.ingestion.dao.mapper",
-        "com.nageoffer.ai.ragent.knowledge.dao.mapper",
-        "com.nageoffer.ai.ragent.user.dao.mapper",
-        "com.nageoffer.ai.ragent.agent.workflow.dao.mapper"
-})
-public class RagentApplication {
+@Component
+public class NoopWorkflowMemoryStrategy implements WorkflowMemoryStrategy {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RagentApplication.class, args);
+    @Override
+    public String strategyType() {
+        return WorkflowMemoryStrategyType.NONE.name();
+    }
+
+    @Override
+    public WorkflowMemoryResult compress(WorkflowMemoryContext context) {
+        return WorkflowMemoryResult.builder().compressed(false).eventCount(0).build();
     }
 }
