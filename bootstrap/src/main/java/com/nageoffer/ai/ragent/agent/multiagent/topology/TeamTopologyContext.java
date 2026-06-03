@@ -70,4 +70,9 @@ public class TeamTopologyContext {
      * 当前轮数
      */
     private Integer currentRound;
+
+    /**
+     * 合并策略
+     */
+    private String mergeStrategy;
 }

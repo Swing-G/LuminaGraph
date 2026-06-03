@@ -119,8 +119,7 @@ public class WorkflowChatRouter {
         boolean quickTriageFlow = TICKET_QUICK_TRIAGE_WORKFLOW_TYPE.equals(workflow.getWorkflowType());
         boolean pureReActFlow = "pure_react_reasoning_chat".equals(workflow.getWorkflowType());
         boolean planExecuteFlow = "plan_execute_reasoning_chat".equals(workflow.getWorkflowType());
-        boolean multiAgentFlow = "multi_agent_chat".equals(workflow.getWorkflowType());
-        if (!identifiers.hasAnyLookupKey() && !quickTriageFlow && !pureReActFlow && !planExecuteFlow && !multiAgentFlow) {
+        if (!identifiers.hasAnyLookupKey() && !quickTriageFlow && !pureReActFlow && !planExecuteFlow) {
             completeWithAssistantMessage(conversationId, userId, callback, buildMissingInfoReply());
             return true;
         }
@@ -131,11 +130,13 @@ public class WorkflowChatRouter {
             request.setBusinessId("chat-ticket-" + IdUtil.getSnowflakeNextIdStr());
             request.setInput(input);
             AgentWorkflowInstanceVO instance = workflowService.run(workflow.getId(), request);
-            String reply;
-            if (multiAgentFlow) {
-                reply = extractMultiAgentReply(instance);
-            } else {
-                reply = toNaturalLanguage(question, instance, previousRun);
+            // 先尝试标准 toNaturalLanguage，失败时回退到多Agent提取
+            String reply = toNaturalLanguage(question, instance, previousRun);
+            if (reply.contains("暂时无法完成") || reply.contains("没有拿到有效")) {
+                String multiAgentReply = extractMultiAgentReply(instance);
+                if (!multiAgentReply.contains("请查看详细结果")) {
+                    reply = multiAgentReply;
+                }
             }
             conversationWorkflowRunService.record(conversationId, userId, workflow, instance, input, buildEntities(identifiers), buildWorkflowRunSummary(instance, reply));
             completeWithAssistantMessage(conversationId, userId, callback, reply);

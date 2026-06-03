@@ -7,6 +7,7 @@ import {
   ChevronsRight,
   ClipboardList,
   Database,
+  Eye,
   GitBranch,
   Github,
   Layers,
@@ -135,6 +136,11 @@ const menuGroups: MenuGroup[] = [
         label: "Workflow 管理",
         icon: GitBranch,
         children: [
+          {
+            path: "/admin/workflows/overview",
+            label: "全景视图",
+            icon: Eye
+          },
           {
             path: "/admin/workflows/builder",
             label: "可视化构建",

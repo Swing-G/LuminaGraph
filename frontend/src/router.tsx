@@ -26,6 +26,7 @@ import { WorkflowPlaygroundPage } from "@/pages/admin/workflows/WorkflowPlaygrou
 import { WorkflowRunPage } from "@/pages/admin/workflows/WorkflowRunPage";
 import { AgentTeamManagePage } from "@/pages/admin/workflows/AgentTeamManagePage";
 import { WorkflowBuilderPage } from "@/pages/admin/workflows/WorkflowBuilderPage";
+import { WorkflowOverviewPage } from "@/pages/admin/workflows/WorkflowOverviewPage";
 import { useAuthStore } from "@/stores/authStore";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -152,6 +153,10 @@ export const router = createBrowserRouter([
       {
         path: "workflows/builder",
         element: <WorkflowBuilderPage />
+      },
+      {
+        path: "workflows/overview",
+        element: <WorkflowOverviewPage />
       },
       {
         path: "workflows",

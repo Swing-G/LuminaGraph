@@ -21,9 +21,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner;
+import com.nageoffer.ai.ragent.agent.multiagent.core.ResultMergeEngine;
 import com.nageoffer.ai.ragent.agent.multiagent.domain.AgentConfig;
 import com.nageoffer.ai.ragent.agent.multiagent.domain.AgentExecutionContext;
 import com.nageoffer.ai.ragent.agent.multiagent.domain.AgentExecutionResult;
+import com.nageoffer.ai.ragent.agent.multiagent.enums.AgentMergeStrategy;
 import com.nageoffer.ai.ragent.agent.multiagent.enums.AgentTeamTopology;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +51,7 @@ public class ParallelTopologyStrategy implements TeamTopologyStrategy {
 
     private final AgentRunner agentRunner;
     private final Executor agentTeamExecutor;
+    private final ResultMergeEngine mergeEngine;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final int AGENT_TIMEOUT_SECONDS = 120;
@@ -100,30 +103,38 @@ public class ParallelTopologyStrategy implements TeamTopologyStrategy {
         }
 
         // 构建聚合结果
-        return buildAggregatedResult(results);
+        return buildAggregatedResult(results, context.getMergeStrategy());
     }
 
-    private AgentExecutionResult buildAggregatedResult(List<AgentExecutionResult> results) {
-        StringBuilder aggregated = new StringBuilder();
-        aggregated.append("=== 多Agent并行分析结果 ===\n\n");
+    private AgentExecutionResult buildAggregatedResult(List<AgentExecutionResult> results, String mergeStrategy) {
+        long totalDuration = results.stream().mapToLong(r -> r.getDurationMs() != null ? r.getDurationMs() : 0).max().orElse(0);
+        int totalTokens = results.stream().mapToInt(r -> r.getEstimatedTokens() != null ? r.getEstimatedTokens() : 0).sum();
+        long successCount = results.stream().filter(AgentExecutionResult::isSuccess).count();
 
-        com.fasterxml.jackson.databind.node.ArrayNode agentResults =
-                objectMapper.createArrayNode();
-        long totalDuration = 0;
-        int totalTokens = 0;
-
-        for (AgentExecutionResult r : results) {
-            aggregated.append("--- ").append(r.getAgentKey()).append(" ---\n");
-            if (r.isSuccess()) {
-                aggregated.append(r.getOutput()).append("\n\n");
-            } else {
-                aggregated.append("[失败] ").append(r.getErrorMessage()).append("\n\n");
+        // SYNTHESIS: 调用 mergeEngine 综合所有 Agent 分析
+        String finalOutput;
+        if ("SYNTHESIS".equalsIgnoreCase(mergeStrategy) && successCount > 1) {
+            AgentExecutionResult synthesized = mergeEngine.merge(
+                    results.stream().filter(AgentExecutionResult::isSuccess).collect(java.util.stream.Collectors.toList()),
+                    AgentMergeStrategy.SYNTHESIS);
+            finalOutput = synthesized.getOutput();
+        } else {
+            // FIRST 或其他：拼接原始输出
+            StringBuilder sb = new StringBuilder("=== 多Agent并行分析结果 ===\n\n");
+            for (AgentExecutionResult r : results) {
+                sb.append("--- ").append(r.getAgentKey()).append(" ---\n");
+                if (r.isSuccess()) {
+                    sb.append(r.getOutput()).append("\n\n");
+                } else {
+                    sb.append("[失败] ").append(r.getErrorMessage()).append("\n\n");
+                }
             }
-            totalDuration = Math.max(totalDuration, r.getDurationMs() != null ? r.getDurationMs() : 0);
-            totalTokens += r.getEstimatedTokens() != null ? r.getEstimatedTokens() : 0;
+            finalOutput = sb.toString();
+        }
 
-            com.fasterxml.jackson.databind.node.ObjectNode entry =
-                    objectMapper.createObjectNode();
+        ArrayNode agentResultsArray = objectMapper.createArrayNode();
+        for (AgentExecutionResult r : results) {
+            ObjectNode entry = objectMapper.createObjectNode();
             entry.put("agentKey", r.getAgentKey());
             entry.put("success", r.isSuccess());
             entry.put("output", r.getOutput() != null ? r.getOutput() : "");
@@ -131,23 +142,22 @@ public class ParallelTopologyStrategy implements TeamTopologyStrategy {
             if (r.getErrorMessage() != null) {
                 entry.put("errorMessage", r.getErrorMessage());
             }
-            agentResults.add(entry);
+            agentResultsArray.add(entry);
         }
 
-        com.fasterxml.jackson.databind.node.ObjectNode structuredOutput =
-                objectMapper.createObjectNode();
+        ObjectNode structuredOutput = objectMapper.createObjectNode();
         structuredOutput.put("topology", "PARALLEL");
+        structuredOutput.put("mergeStrategy", mergeStrategy != null ? mergeStrategy : "");
         structuredOutput.put("totalAgents", results.size());
-        long successCount = results.stream().filter(AgentExecutionResult::isSuccess).count();
         structuredOutput.put("successCount", successCount);
-        structuredOutput.set("agentResults", agentResults);
-        structuredOutput.put("aggregatedSummary", aggregated.toString());
+        structuredOutput.set("agentResults", agentResultsArray);
+        structuredOutput.put("aggregatedSummary", finalOutput);
 
         return AgentExecutionResult.builder()
                 .agentKey("PARALLEL_AGGREGATED")
                 .success(true)
                 .status("SUCCESS")
-                .output(aggregated.toString())
+                .output(finalOutput)
                 .structuredOutput(structuredOutput)
                 .durationMs(totalDuration)
                 .estimatedTokens(totalTokens)

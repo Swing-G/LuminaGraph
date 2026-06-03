@@ -92,8 +92,8 @@ public class ResultMergeEngine {
                     .append(results.get(i).getOutput()).append("\n\n");
         }
 
-        String prompt = "以下是对同一问题的多个专家独立分析结果。请综合所有观点，"
-                + "找出一致结论、互补观点和分歧点，整合为一份结构化的综合分析报告：\n\n" + allOutputs;
+        String prompt = "以下是多位专家对同一个问题的分析。请直接告诉用户答案，"
+                + "像客服回复一样自然、简洁，不要用 综合分析报告 这类标题：\n\n" + allOutputs;
 
         try {
             String synthesis = llmService.chat(prompt);

@@ -92,6 +92,7 @@ public class AgentTeamOrchestrator {
                 .workflowContext(workflowContext)
                 .maxRounds(teamConfig.getMaxRounds())
                 .currentRound(1)
+                .mergeStrategy(teamDO.getMergeStrategy())
                 .build();
 
         // 5. 选择并执行拓扑策略
