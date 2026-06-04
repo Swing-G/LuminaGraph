@@ -27,6 +27,7 @@ import { WorkflowRunPage } from "@/pages/admin/workflows/WorkflowRunPage";
 import { AgentTeamManagePage } from "@/pages/admin/workflows/AgentTeamManagePage";
 import { WorkflowBuilderPage } from "@/pages/admin/workflows/WorkflowBuilderPage";
 import { WorkflowOverviewPage } from "@/pages/admin/workflows/WorkflowOverviewPage";
+import { SkillManagePage } from "@/pages/admin/skills/SkillManagePage";
 import { useAuthStore } from "@/stores/authStore";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -177,6 +178,10 @@ export const router = createBrowserRouter([
       {
         path: "agent-teams",
         element: <AgentTeamManagePage />
+      },
+      {
+        path: "skills",
+        element: <SkillManagePage />
       },
       {
         path: "traces/:traceId",

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  BookOpen,
   ClipboardList,
   Database,
   Eye,
@@ -150,6 +151,11 @@ const menuGroups: MenuGroup[] = [
             path: "/admin/agent-teams",
             label: "Agent Team",
             icon: Users
+          },
+          {
+            path: "/admin/skills",
+            label: "Skill 管理",
+            icon: BookOpen
           },
           {
             path: "/admin/workflows/run",
