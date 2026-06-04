@@ -55,7 +55,17 @@ public class SkillLoader {
         log.info("开始扫描 skills 目录...");
         try {
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            Resource[] resources = resolver.getResources("classpath:skills/*.md");
+            Resource[] resources;
+            try {
+                resources = resolver.getResources("classpath*:skills/*.md");
+            } catch (Exception dirEx) {
+                log.warn("skills 目录不存在或无法扫描: {}", dirEx.getMessage());
+                return;
+            }
+            if (resources.length == 0) {
+                log.info("未找到 Skill 文件，跳过加载");
+                return;
+            }
             log.info("找到 {} 个 Skill 文件", resources.length);
 
             for (Resource resource : resources) {
