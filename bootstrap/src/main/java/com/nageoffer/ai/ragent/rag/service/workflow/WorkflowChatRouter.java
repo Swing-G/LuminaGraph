@@ -137,6 +137,8 @@ public class WorkflowChatRouter {
                             + "\n\n## 领域规则\n" + (skill.getDomainRules() != null ? skill.getDomainRules() : "")
                             + "\n\n## 提示词模板\n" + (skill.getPromptTemplate() != null ? skill.getPromptTemplate() : "");
                     log.info("Skill 匹配成功: {} → 已注入上下文", skill.getSkillKey());
+                    // 实时通知前端
+                    callback.onStatus("📋 已匹配 Skill: " + skill.getSkillKey());
                 }
             } catch (Exception e) {
                 log.warn("Skill 匹配异常，跳过", e);
@@ -150,7 +152,10 @@ public class WorkflowChatRouter {
             request.setBusinessType("chat_ticket_triage");
             request.setBusinessId("chat-ticket-" + IdUtil.getSnowflakeNextIdStr());
             request.setInput(input);
+            // 设置 SSE 回调（TTL 透传到 Agent 执行线程）
+            com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().set(callback);
             AgentWorkflowInstanceVO instance = workflowService.run(workflow.getId(), request);
+            com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().remove();
             // 异步触发 Skill 进化检查
             if (finalSkillKey != null) {
                 try {
@@ -167,10 +172,6 @@ public class WorkflowChatRouter {
                 if (!multiAgentReply.contains("请查看详细结果")) {
                     reply = multiAgentReply;
                 }
-            }
-            // Skill 匹配提示（放在回复末尾，小字标注）
-            if (finalSkillKey != null) {
-                reply = reply + "\n\n---\n*📋 已应用 Skill: " + finalSkillKey + "*";
             }
             conversationWorkflowRunService.record(conversationId, userId, workflow, instance, input, buildEntities(identifiers), buildWorkflowRunSummary(instance, reply));
             completeWithAssistantMessage(conversationId, userId, callback, reply);
@@ -559,12 +560,48 @@ public class WorkflowChatRouter {
                 + "你也可以直接说：查一下账号 A10001 的续费失败原因。";
     }
 
+    /**
+     * 从 workflow instance context 中提取 Agent 执行状态摘要
+     */
+    private String buildAgentStatusLine(AgentWorkflowInstanceVO instance) {
+        if (instance.getContext() == null) return null;
+        JsonNode ctx = instance.getContext();
+        var fields = ctx.fields();
+        while (fields.hasNext()) {
+            var entry = fields.next();
+            JsonNode val = entry.getValue();
+            if (val == null || !val.isObject()) continue;
+            // 检测 topology 字段（多 Agent 节点的标志）
+            String topology = val.path("topology").asText(null);
+            if (topology == null) continue;
+            int total = val.path("totalAgents").asInt(0);
+            long success = val.path("successCount").asLong(0);
+            String merge = val.path("mergeStrategy").asText("");
+            return "🤖 Agent Team 执行完毕 · 拓扑: " + topology
+                    + " · 成功: " + success + "/" + total
+                    + (merge.isEmpty() ? "" : " · 合并: " + merge);
+        }
+        return null;
+    }
+
     private String buildSafeFailureReply() {
         return "工单处理 Workflow 暂时无法完成查询。请稍后重试，或确认工单编号、账号编号、订单编号是否正确后再发起查询。";
     }
 
     private void completeWithAssistantMessage(String conversationId, String userId, StreamCallback callback, String content) {
-        callback.onContent(content);
+        // 流式输出：按段落分块发送，模拟实时打字效果
+        String[] paragraphs = content.split("\n\n");
+        for (int i = 0; i < paragraphs.length; i++) {
+            String chunk = paragraphs[i];
+            if (i < paragraphs.length - 1) chunk += "\n\n";
+            callback.onContent(chunk);
+            try {
+                Thread.sleep(60); // 段落间短暂停顿
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
         callback.onComplete();
     }
 

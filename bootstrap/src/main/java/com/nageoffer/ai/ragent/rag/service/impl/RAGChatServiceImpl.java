@@ -47,6 +47,7 @@ public class RAGChatServiceImpl implements RAGChatService {
     private final StreamCallbackFactory callbackFactory;
     private final StreamTaskManager taskManager;
     private final WorkflowChatRouter workflowChatRouter;
+    private final org.springframework.context.ApplicationContext applicationContext;
 
     @Override
     @ChatRateLimit
@@ -62,7 +63,9 @@ public class RAGChatServiceImpl implements RAGChatService {
         StreamCallback callback = callbackFactory.createChatEventHandler(emitter, actualConversationId, taskId);
 
         if (actualMode == ChatMode.WORKFLOW) {
-            workflowChatRouter.handle(question, actualConversationId, UserContext.getUserId(), workflowType, callback);
+            // 异步执行：让 controller 先 return emitter，SSE 事件才能实时推送到客户端
+            applicationContext.getBean("chatEntryExecutor", java.util.concurrent.Executor.class).execute(() ->
+                    workflowChatRouter.handle(question, actualConversationId, UserContext.getUserId(), workflowType, callback));
             return;
         }
         if (actualMode == ChatMode.REACT || actualMode == ChatMode.PAE) {

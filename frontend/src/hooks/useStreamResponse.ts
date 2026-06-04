@@ -4,6 +4,7 @@ export interface StreamHandlers {
   onMeta?: (payload: StreamMetaPayload) => void;
   onMessage?: (payload: MessageDeltaPayload) => void;
   onThinking?: (payload: MessageDeltaPayload) => void;
+  onStatus?: (payload: unknown) => void;
   onFinish?: (payload: CompletionPayload) => void;
   onDone?: () => void;
   onCancel?: (payload: CompletionPayload) => void;
@@ -77,6 +78,9 @@ async function readSseStream(response: Response, handlers: StreamHandlers, signa
         break;
       case "title":
         handlers.onTitle?.(payload as { title: string });
+        break;
+      case "status":
+        handlers.onStatus?.(payload);
         break;
       case "error":
         handlers.onError?.(new Error(String((payload as { error?: string })?.error || payload)));

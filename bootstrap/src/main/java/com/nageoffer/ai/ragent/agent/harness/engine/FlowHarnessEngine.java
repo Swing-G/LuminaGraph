@@ -107,6 +107,10 @@ public class FlowHarnessEngine implements HarnessEngine {
         normalizeContext(context, input);
         appendEvent(instance.getId(), null, "USER_INPUT", "INFO", "用户输入", input);
         Map<String, Integer> reflectionRounds = new HashMap<>();
+        // 上报 Workflow 启动状态
+        reportStatus("📋 Workflow「" + definition.getWorkflow().getName() + "」开始执行 · "
+                + definition.getNodes().size() + " 个节点 · Harness: " + definition.getWorkflow().getHarnessType());
+
         String current = resolveStartNode(definition);
         String lastNodeKey = null;
         int guard = 0;
@@ -121,12 +125,21 @@ public class FlowHarnessEngine implements HarnessEngine {
             lastNodeKey = current;
             persist(instance, current, context);
             saveCheckpoint(instance, current, context);
+            // 节点开始
+            String strategyLabel = resolveNodeStrategyLabel(node);
+            long nodeStart = System.currentTimeMillis();
+            String displayName = StringUtils.hasText(node.getNodeName()) ? node.getNodeName() : current;
+            reportStatus("▶️ 进入节点「" + displayName + "」"
+                    + " · 类型: " + node.getNodeType() + (strategyLabel.isEmpty() ? "" : " · " + strategyLabel));
             appendEvent(instance.getId(), null, "NODE_STARTED", "INFO", "节点开始执行: " + current, objectMapper.createObjectNode().put("nodeKey", current));
             ActionResult result = executeNode(instance, node, input, context);
             if (result.getOutput() != null) {
                 context.set(node.getNodeKey(), result.getOutput());
                 persist(instance, current, context);
             }
+            float nodeDuration = (System.currentTimeMillis() - nodeStart) / 1000.0f;
+            reportStatus("✅ 节点「" + displayName + "」完成 ("
+                    + String.format("%.1f", nodeDuration) + "s)");
             appendEvent(instance.getId(), null, "NODE_COMPLETED", "INFO", "节点执行完成: " + current, objectMapper.valueToTree(result));
             updateShortTermContext(context, node, result);
             workflowMemoryService.compressIfNeeded(instance, context, input, workflowConfig, current, guard);
@@ -331,4 +344,21 @@ public class FlowHarnessEngine implements HarnessEngine {
     private String toActionResultJson(ActionResult result) { try { return objectMapper.writeValueAsString(result); } catch (Exception ex) { throw new ClientException("ActionResult序列化失败"); } }
     private String json(JsonNode node) { return node == null || node.isNull() ? null : node.toString(); }
     private JsonNode parse(String raw) { if (!StringUtils.hasText(raw)) return null; try { return objectMapper.readTree(raw); } catch (Exception ex) { throw new ClientException("JSON解析失败"); } }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb = com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().get();
+        if (cb != null) cb.onStatus(msg);
+    }
+
+    private String resolveNodeStrategyLabel(AgentWorkflowNodeDO node) {
+        JsonNode config = parse(node.getConfigJson());
+        if (config == null) return "";
+        String strategy = config.path("strategyType").asText(null);
+        if ("AGENT_TEAM".equals(strategy)) {
+            return "策略: Agent Team";
+        }
+        if (strategy != null) return "策略: " + strategy;
+        if (node.getActionType() != null && !"NOOP".equals(node.getActionType())) return "动作: " + node.getActionType();
+        return "";
+    }
 }

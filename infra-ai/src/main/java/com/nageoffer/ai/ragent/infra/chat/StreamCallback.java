@@ -82,5 +82,13 @@ public interface StreamCallback {
      *
      * @param error 异常对象，包含具体错误信息
      */
+    /**
+     * 接收 Agent 执行状态消息（非回答内容）
+     * 默认委托给 onContent 以保持向后兼容
+     */
+    default void onStatus(String message) {
+        onContent(message);
+    }
+
     void onError(Throwable error);
 }

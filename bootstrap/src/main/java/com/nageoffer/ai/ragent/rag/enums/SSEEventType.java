@@ -53,7 +53,12 @@ public enum SSEEventType {
     /**
      * 拒绝事件
      */
-    REJECT("reject");
+    REJECT("reject"),
+
+    /**
+     * Agent 执行状态事件
+     */
+    STATUS("status");
 
     private final String value;
 

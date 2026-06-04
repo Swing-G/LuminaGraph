@@ -60,6 +60,19 @@ public class AgentRunner {
     private final org.springframework.context.ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
+    /** TTL 透传的 SSE 回调，由 WorkflowChatRouter 设置 */
+    private static final com.alibaba.ttl.TransmittableThreadLocal<com.nageoffer.ai.ragent.infra.chat.StreamCallback> STATUS_CALLBACK =
+            new com.alibaba.ttl.TransmittableThreadLocal<>();
+
+    public static com.alibaba.ttl.TransmittableThreadLocal<com.nageoffer.ai.ragent.infra.chat.StreamCallback> getStatusCallback() {
+        return STATUS_CALLBACK;
+    }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb = STATUS_CALLBACK.get();
+        if (cb != null) cb.onStatus(msg);
+    }
+
     /**
      * 执行单个Agent
      * 根据 Agent 配置的 strategyType（默认 REACT）选择对应的 NodeExecutionStrategy
@@ -69,6 +82,7 @@ public class AgentRunner {
         AgentConfig config = context.getAgentConfig();
         String strategyType = config.getStrategyType() != null ? config.getStrategyType() : "REACT";
         log.info("AgentRunner启动: agentKey={}, strategy={}", config.getAgentKey(), strategyType);
+        reportStatus("🤖 " + config.getAgentName() + " 开始分析...");
 
         try {
             // 1. 构建 NodeExecutionContext（桥接 Agent 上下文到 Node 上下文）
@@ -90,15 +104,18 @@ public class AgentRunner {
             long duration = System.currentTimeMillis() - startTime;
             if (actionResult.isSuccess()) {
                 String output = actionResult.getOutput() != null ? actionResult.getOutput().toString() : "";
+                reportStatus("✅ " + config.getAgentName() + " 完成 (" + String.format("%.1f", duration / 1000.0) + "s)");
                 return AgentExecutionResult.success(config.getAgentKey(), output,
                         actionResult.getOutput(), duration);
             } else {
+                reportStatus("❌ " + config.getAgentName() + " 失败: " + actionResult.getErrorMessage());
                 return AgentExecutionResult.fail(config.getAgentKey(),
                         actionResult.getErrorMessage(), duration);
             }
 
         } catch (Exception e) {
             log.error("AgentRunner执行失败: agentKey={}", config.getAgentKey(), e);
+            reportStatus("❌ " + config.getAgentName() + " 异常: " + e.getMessage());
             return AgentExecutionResult.fail(config.getAgentKey(), e.getMessage(),
                     System.currentTimeMillis() - startTime);
         }

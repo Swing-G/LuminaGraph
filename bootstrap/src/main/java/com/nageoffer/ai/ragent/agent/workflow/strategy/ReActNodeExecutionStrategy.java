@@ -36,6 +36,7 @@ import com.nageoffer.ai.ragent.framework.exception.ClientException;
 import com.nageoffer.ai.ragent.infra.chat.LLMService;
 import com.nageoffer.ai.ragent.infra.util.LLMResponseCleaner;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -45,6 +46,7 @@ import java.util.List;
 /**
  * ReAct节点执行策略
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReActNodeExecutionStrategy implements NodeExecutionStrategy {
@@ -73,9 +75,16 @@ public class ReActNodeExecutionStrategy implements NodeExecutionStrategy {
         ArrayNode steps = objectMapper.createArrayNode();
         for (int i = 1; i <= maxIterations; i++) {
             String response = llmService.chat(buildChatRequest(config, messages), config.path("modelId").asText(null));
-            JsonNode decision = parseDecision(response);
             ObjectNode step = objectMapper.createObjectNode();
             step.put("iteration", i);
+            JsonNode decision = parseDecision(response);
+            if (decision == null) {
+                // JSON 解析失败，给出纠正提示并重试
+                messages.add(ChatMessage.assistant(response));
+                messages.add(ChatMessage.user("你的输出不是有效的JSON格式。请严格按格式输出：{\"type\":\"action\",\"tool\":\"工具名\",\"parameters\":{...}} 或 {\"type\":\"final\",\"answer\":{...}}"));
+                steps.add(step);
+                continue;
+            }
             step.set("decision", decision);
 
             String type = decision.path("type").asText(null);
@@ -88,16 +97,36 @@ public class ReActNodeExecutionStrategy implements NodeExecutionStrategy {
                 return ActionResult.success(finalOutput, buildMetadata(context, maxIterations, i, true));
             }
             if (!"action".equalsIgnoreCase(type)) {
+                // 输出类型非法，纠正并重试
+                messages.add(ChatMessage.assistant(response));
+                messages.add(ChatMessage.user("type 必须是 \"action\" 或 \"final\": " + type + " 不被识别。请重新输出。"));
                 steps.add(step);
-                return ActionResult.fail("ReAct输出类型非法: " + type, buildFailureMetadata(steps));
+                continue;
             }
 
-            ToolDescriptor tool = resolveTool(config, decision.path("tool").asText(null));
+            String toolName = decision.path("tool").asText(null);
+            if (!StringUtils.hasText(toolName)) {
+                messages.add(ChatMessage.assistant(response));
+                messages.add(ChatMessage.user("action 缺少 tool 字段，需要指定工具名。请重新输出。"));
+                steps.add(step);
+                continue;
+            }
+
+            ToolDescriptor tool = resolveTool(config, toolName);
+            if (tool == null) {
+                messages.add(ChatMessage.assistant(response));
+                messages.add(ChatMessage.user("工具 \"" + toolName + "\" 不在可用列表中，请选择允许的工具。"));
+                steps.add(step);
+                continue;
+            }
             ActionResult toolResult = executeTool(context, tool, decision.path("parameters"));
             step.set("toolResult", objectMapper.valueToTree(toolResult));
             steps.add(step);
             if (!toolResult.isSuccess()) {
-                return ActionResult.fail(toolResult.getErrorMessage(), buildFailureMetadata(steps));
+                // 工具失败，将错误作为观察，继续循环让LLM调整
+                messages.add(ChatMessage.assistant(decision.toString()));
+                messages.add(ChatMessage.user("工具调用失败: " + toolResult.getErrorMessage() + "。请根据错误调整并输出新的决策。"));
+                continue;
             }
             messages.add(ChatMessage.assistant(decision.toString()));
             messages.add(ChatMessage.user(buildObservationPrompt(tool, toolResult)));
@@ -155,14 +184,12 @@ public class ReActNodeExecutionStrategy implements NodeExecutionStrategy {
             String cleaned = LLMResponseCleaner.stripMarkdownCodeFence(response);
             return objectMapper.readTree(cleaned);
         } catch (Exception ex) {
-            throw new ClientException("ReAct模型输出不是合法JSON: " + response);
+            log.warn("ReAct输出非JSON，将自动重试: {}", response.substring(0, Math.min(200, response.length())));
+            return null;
         }
     }
 
     private ToolDescriptor resolveTool(JsonNode config, String toolName) {
-        if (!StringUtils.hasText(toolName)) {
-            throw new ClientException("ReAct action缺少tool字段");
-        }
         JsonNode tools = config.path("allowedTools");
         if (tools.isArray()) {
             for (JsonNode tool : tools) {
@@ -174,7 +201,7 @@ public class ReActNodeExecutionStrategy implements NodeExecutionStrategy {
                 }
             }
         }
-        throw new ClientException("ReAct工具未授权: " + toolName);
+        return null;
     }
 
     private ActionResult executeTool(NodeExecutionContext context, ToolDescriptor tool, JsonNode parameters) {

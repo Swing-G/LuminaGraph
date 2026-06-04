@@ -53,6 +53,7 @@ public class StreamChatEventHandler implements StreamCallback {
     private final StringBuilder thinking = new StringBuilder();
     private long thinkingStartMs;
     private int thinkingDurationSeconds;
+    private final java.util.List<String> statusLogs = new java.util.ArrayList<>();
 
     /**
      * 使用参数对象构造（推荐）
@@ -139,6 +140,14 @@ public class StreamChatEventHandler implements StreamCallback {
     }
 
     @Override
+    public void onStatus(String message) {
+        if (taskManager.isCancelled(taskId)) return;
+        statusLogs.add(message);
+        sender.sendEvent(SSEEventType.STATUS.value(), message);
+        sender.sendEvent(null, "");
+    }
+
+    @Override
     public void onThinking(String chunk) {
         if (taskManager.isCancelled(taskId)) {
             return;
@@ -161,14 +170,20 @@ public class StreamChatEventHandler implements StreamCallback {
         String messageId = null;
         try {
             String thinkingContent = thinking.isEmpty() ? null : thinking.toString();
-            ChatMessage message = ChatMessage.assistant(answer.toString(), thinkingContent, resolveThinkingDuration());
+            String fullContent = answer.toString();
+            // 将 statusLogs 嵌入内容头部（前端自动解析剥离，不影响显示）
+            if (!statusLogs.isEmpty()) {
+                String logsJson = "{\"statusLogs\":" + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(statusLogs) + "}";
+                fullContent = logsJson + "\n" + fullContent;
+            }
+            ChatMessage message = ChatMessage.assistant(fullContent, thinkingContent, resolveThinkingDuration());
             messageId = memoryService.append(conversationId, userId, message);
         } catch (Exception e) {
             log.error("对话完成时持久化消息失败，conversationId：{}", conversationId, e);
         }
         String title = resolveTitleForEvent();
         String messageIdText = StrUtil.isBlank(messageId) ? null : messageId;
-        sender.sendEvent(SSEEventType.FINISH.value(), new CompletionPayload(messageIdText, title));
+        sender.sendEvent(SSEEventType.FINISH.value(), new CompletionPayload(messageIdText, title, statusLogs));
         sender.sendEvent(SSEEventType.DONE.value(), "[DONE]");
         taskManager.unregister(taskId);
         sender.complete();

@@ -93,6 +93,10 @@ public class SequentialTopologyStrategy implements TeamTopologyStrategy {
                 agentInput.put("instruction", "你是第一个分析的专家。请基于你的专业角度独立分析。");
             }
 
+            // 上报状态
+            reportStatus("▶️ 第" + (i + 1) + "/" + agents.size() + " 步: 「" + agent.getAgentName() + "」开始分析...");
+            long agentStart = System.currentTimeMillis();
+
             // 执行
             AgentExecutionContext agentCtx = AgentExecutionContext.builder()
                     .instanceId(context.getInstanceId())
@@ -105,6 +109,8 @@ public class SequentialTopologyStrategy implements TeamTopologyStrategy {
 
             AgentExecutionResult result = agentRunner.run(agentCtx);
             results.add(result);
+            float dur = (System.currentTimeMillis() - agentStart) / 1000.0f;
+            reportStatus("✅ 第" + (i + 1) + "/" + agents.size() + " 步: 「" + agent.getAgentName() + "」完成 (" + String.format("%.1f", dur) + "s)");
 
             // 写入 Blackboard
             if (result.isSuccess()) {
@@ -161,5 +167,10 @@ public class SequentialTopologyStrategy implements TeamTopologyStrategy {
                 .structuredOutput(structuredOutput)
                 .durationMs(totalDuration)
                 .build();
+    }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb = com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().get();
+        if (cb != null) cb.onStatus(msg);
     }
 }

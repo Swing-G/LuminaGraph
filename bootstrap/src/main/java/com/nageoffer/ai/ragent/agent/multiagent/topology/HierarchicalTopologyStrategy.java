@@ -81,11 +81,13 @@ public class HierarchicalTopologyStrategy implements TeamTopologyStrategy {
                 workers.stream().map(AgentConfig::getAgentKey).collect(Collectors.joining(",")));
 
         // ─── Phase 1: LEADER_PLAN — 拆解任务 ─────
+        reportStatus("👑 Phase 1/3: Leader「" + leader.getAgentName() + "」正在分析任务并拆解...");
         AgentExecutionResult planResult = runLeaderPlan(leader, context);
         if (!planResult.isSuccess()) {
             return AgentExecutionResult.fail("HIERARCHICAL", "Leader 拆解任务失败: " + planResult.getErrorMessage(), planResult.getDurationMs());
         }
         log.info("Hierarchical Phase1 完成: Leader 已拆解任务");
+        reportStatus("✅ Leader 完成拆解 → 分配给 " + workers.size() + " 个 Worker");
 
         // 解析拆解结果，匹配 Worker
         Map<String, String> workerTasks = parseSubtasks(planResult.getOutput(), workers);
@@ -95,11 +97,14 @@ public class HierarchicalTopologyStrategy implements TeamTopologyStrategy {
         }
 
         // ─── Phase 2: WORKERS_EXECUTE — 并行执行 ─────
+        reportStatus("⚡ Phase 2/3: " + workers.size() + " 个 Worker 并行执行中...");
         Map<String, AgentExecutionResult> workerResults = runWorkers(workers, workerTasks, context);
         log.info("Hierarchical Phase2 完成: Worker成功={}/{}",
                 workerResults.values().stream().filter(AgentExecutionResult::isSuccess).count(), workers.size());
+        reportStatus("✅ 所有 Worker 执行完毕 (" + workerResults.values().stream().filter(AgentExecutionResult::isSuccess).count() + "/" + workers.size() + " 成功)");
 
         // ─── Phase 3: LEADER_SYNTHESIZE — 合成最终答案 ─────
+        reportStatus("🧠 Phase 3/3: Leader 正在综合所有 Worker 输出...");
         AgentExecutionResult finalResult = runLeaderSynthesize(leader, context, planResult, workerResults);
         log.info("Hierarchical Phase3 完成: success={}", finalResult.isSuccess());
 
@@ -282,6 +287,11 @@ public class HierarchicalTopologyStrategy implements TeamTopologyStrategy {
                 .structuredOutput(structuredOutput)
                 .durationMs(totalDuration)
                 .build();
+    }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb = com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().get();
+        if (cb != null) cb.onStatus(msg);
     }
 
     private String extractJson(String text) {

@@ -80,6 +80,7 @@ public class DebateTopologyStrategy implements TeamTopologyStrategy {
 
         for (int round = 1; round <= maxRounds; round++) {
             log.info("Debate 第{}轮开始", round);
+            reportStatus("📢 辩论第" + round + "/" + maxRounds + "轮开始...");
 
             // 1. 构建本轮输入：首轮用原始任务，后续轮加入上轮所有 Agent 输出
             ObjectNode roundInput = buildRoundInput(context, roundResults, round, agents);
@@ -284,6 +285,12 @@ public class DebateTopologyStrategy implements TeamTopologyStrategy {
                 .structuredOutput(structuredOutput)
                 .durationMs(totalDuration)
                 .build();
+    }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb =
+                com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().get();
+        if (cb != null) cb.onStatus(msg);
     }
 
     // ─── 内部类 ──────

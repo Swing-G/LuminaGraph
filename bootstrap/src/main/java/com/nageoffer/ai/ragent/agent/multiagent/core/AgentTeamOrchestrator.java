@@ -83,6 +83,11 @@ public class AgentTeamOrchestrator {
         // 3. 转换为领域模型
         AgentTeamConfig teamConfig = buildTeamConfig(teamDO, agentDOs);
 
+        // 上报 Agent Team 启动
+        reportStatus("🤖 Agent Team「" + teamConfig.getName() + "」启动 · "
+                + teamConfig.getAgents().size() + " Agent · 拓扑: " + teamConfig.getTopology()
+                + " · 合并: " + teamConfig.getMergeStrategy());
+
         // 4. 构建拓扑上下文
         TeamTopologyContext topologyContext = TeamTopologyContext.builder()
                 .instanceId(instanceId)
@@ -198,5 +203,10 @@ public class AgentTeamOrchestrator {
         }
 
         return builder.build();
+    }
+
+    private void reportStatus(String msg) {
+        com.nageoffer.ai.ragent.infra.chat.StreamCallback cb = com.nageoffer.ai.ragent.agent.multiagent.core.AgentRunner.getStatusCallback().get();
+        if (cb != null) cb.onStatus(msg);
     }
 }

@@ -326,6 +326,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (!payload || typeof payload !== "object") return;
         get().appendStreamContent(payload.delta);
       },
+      onStatus: (payload: unknown) => {
+        if (get().streamingMessageId !== assistantId) return;
+        const msg = typeof payload === "string" ? payload : String(payload || "");
+        if (!msg.trim()) return;
+        set((state) => ({
+          messages: state.messages.map((m) =>
+            m.id === assistantId
+              ? { ...m, statusLogs: [...(m.statusLogs || []), msg.trim()] }
+              : m
+          )
+        }));
+      },
       onFinish: (payload: CompletionPayload) => {
         if (get().streamingMessageId !== assistantId) return;
         if (!payload) return;
@@ -347,6 +359,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }));
         }
         if (payload.messageId) {
+          const persistedLogs = payload.statusLogs?.length ? payload.statusLogs : undefined;
           set((state) => ({
             messages: state.messages.map((message) =>
               message.id === state.streamingMessageId
@@ -355,6 +368,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     id: String(payload.messageId),
                     status: "done",
                     isThinking: false,
+                    statusLogs: persistedLogs || message.statusLogs,
                     thinkingDuration:
                       message.thinkingDuration ?? computeThinkingDuration(state.thinkingStartAt)
                   }
