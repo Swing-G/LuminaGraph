@@ -65,6 +65,7 @@ public class WorkflowChatRouter {
     private final ConversationWorkflowRunService conversationWorkflowRunService;
     private final ObjectMapper objectMapper;
     private final LLMService llmService;
+    private final com.nageoffer.ai.ragent.agent.skill.core.AgentSkillService skillService;
 
     public boolean handle(String question, String conversationId, String userId, String workflowType,
                           StreamCallback callback) {
@@ -124,7 +125,23 @@ public class WorkflowChatRouter {
             return true;
         }
         try {
+            // 匹配 Skill（异步，失败不影响主流程）
+            String matchedSkillContent = null;
+            try {
+                com.nageoffer.ai.ragent.agent.skill.dao.entity.AgentSkillDO skill = skillService.matchSkill(question);
+                if (skill != null) {
+                    matchedSkillContent = "## 业务SOP\n" + (skill.getSopContent() != null ? skill.getSopContent() : "")
+                            + "\n\n## 领域规则\n" + (skill.getDomainRules() != null ? skill.getDomainRules() : "")
+                            + "\n\n## 提示词模板\n" + (skill.getPromptTemplate() != null ? skill.getPromptTemplate() : "");
+                    log.info("Skill 匹配成功: {} → 已注入上下文", skill.getSkillKey());
+                }
+            } catch (Exception e) {
+                log.warn("Skill 匹配异常，跳过", e);
+            }
             ObjectNode input = buildInput(question, userId, identifiers, previousRun);
+            if (matchedSkillContent != null) {
+                input.put("skillContext", matchedSkillContent);
+            }
             AgentWorkflowRunRequest request = new AgentWorkflowRunRequest();
             request.setBusinessType("chat_ticket_triage");
             request.setBusinessId("chat-ticket-" + IdUtil.getSnowflakeNextIdStr());

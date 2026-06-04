@@ -154,6 +154,13 @@ public class AgentRunner {
             systemPrompt.append("parameters中的参数值必须从任务输入的JSON中提取对应的字段值。\n");
         }
 
+        // 注入 Skill 上下文（如果输入中有 skillContext 字段）
+        if (context.getOriginalInput() != null && context.getOriginalInput().has("skillContext")) {
+            String skillContext = context.getOriginalInput().path("skillContext").asText(null);
+            if (skillContext != null && !skillContext.isBlank()) {
+                systemPrompt.append("\n\n## 业务知识库（Skill）\n").append(skillContext).append("\n");
+            }
+        }
         messages.add(ChatMessage.system(systemPrompt.toString()));
 
         // 加载历史记忆
