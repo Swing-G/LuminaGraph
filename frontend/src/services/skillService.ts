@@ -63,3 +63,4 @@ export async function deleteSkill(id: string) { return api.delete<void>(`/agent/
 export async function getSuggestions(skillId: string) { return api.get<SkillSuggestion[]>(`/agent/skills/${skillId}/suggestions`); }
 export async function approveSuggestion(skillId: string, suggestionId: string) { return api.put<void>(`/agent/skills/${skillId}/suggestions/${suggestionId}/approve`); }
 export async function rejectSuggestion(skillId: string, suggestionId: string) { return api.put<void>(`/agent/skills/${skillId}/suggestions/${suggestionId}/reject`); }
+export async function reloadSkills() { return api.post<string>("/agent/skills/reload"); }

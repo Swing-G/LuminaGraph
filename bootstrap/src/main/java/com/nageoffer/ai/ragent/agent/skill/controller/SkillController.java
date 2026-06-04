@@ -46,6 +46,7 @@ public class SkillController {
 
     private final AgentSkillMapper skillMapper;
     private final AgentSkillSuggestionMapper suggestionMapper;
+    private final com.nageoffer.ai.ragent.agent.skill.core.SkillLoader skillLoader;
     private final ObjectMapper objectMapper;
 
     // ─── Skill CRUD ──────────
@@ -102,6 +103,17 @@ public class SkillController {
     public Result<Void> delete(@PathVariable String id) {
         skillMapper.deleteById(id);
         return Results.success();
+    }
+
+    // ─── 重新加载 .md 文件 ────
+    @PostMapping("/agent/skills/reload")
+    public Result<String> reload() {
+        try {
+            skillLoader.load();
+            return Results.success("已重新扫描 skills 目录");
+        } catch (Exception e) {
+            return Results.success("重新加载失败: " + e.getMessage());
+        }
     }
 
     // ─── Suggestion review ────

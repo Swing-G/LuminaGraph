@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Plus, Save, Trash2, Search, BookOpen, Lightbulb, Check, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Plus, Save, Trash2, Search, BookOpen, Lightbulb, Check, X, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/utils/error";
 import { getAvailableTools } from "@/services/multiAgentService";
 import {
-  getSkills, getSkill, createSkill, updateSkill, deleteSkill, getSuggestions, approveSuggestion, rejectSuggestion,
+  getSkills, getSkill, createSkill, updateSkill, deleteSkill, getSuggestions, approveSuggestion, rejectSuggestion, reloadSkills,
   FIELD_LABELS, type Skill, type SkillCreatePayload, type SkillSuggestion, type PageResult
 } from "@/services/skillService";
 
@@ -54,6 +54,11 @@ export function SkillManagePage() {
     } catch (e) { toast.error(getErrorMessage(e)); } finally { setBusy(false); }
   };
 
+  const reload = async () => {
+    setBusy(true);
+    try { await reloadSkills(); await loadSkills(1); toast.success("Skill 已从 .md 文件重新加载"); }
+    catch (e) { toast.error(getErrorMessage(e)); } finally { setBusy(false); }
+  };
   const resetForm = () => { setSkillId(""); setSkill(null); setSuggestions([]);
     setSKey(""); setSName(""); setSDesc(""); setSCategory(""); setSTags(""); setSTools("");
     setSSop(""); setSRules(""); setSPrompt(""); setSOutput(""); setSStatus("ENABLED"); };
@@ -105,7 +110,7 @@ export function SkillManagePage() {
         <Card>
           <CardHeader><CardTitle>Skill 列表</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex gap-2"><Input value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索" /><Button variant="outline" onClick={() => loadSkills(1)}><Search className="h-4 w-4" /></Button></div>
+            <div className="flex gap-2"><Input value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索" /><Button variant="outline" onClick={() => loadSkills(1)}><Search className="h-4 w-4" /></Button><Button variant="outline" onClick={reload} disabled={busy} title="从 .md 文件重新加载"><RefreshCw className="h-4 w-4" /></Button></div>
             <div className="max-h-[500px] overflow-auto space-y-2">
               {page.records.map(s => (
                 <button key={s.id} onClick={() => loadSkill(s.id)}
