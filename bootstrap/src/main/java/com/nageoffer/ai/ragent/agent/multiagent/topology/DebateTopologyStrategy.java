@@ -213,8 +213,8 @@ public class DebateTopologyStrategy implements TeamTopologyStrategy {
 
         boolean isLastRound = round >= maxRounds;
         String prompt = isLastRound
-                ? "以下是多位专家对同一问题的分析（第" + round + "/" + maxRounds + "轮，已是最后一轮）。"
-                    + "请综合所有观点，像客服一样直接告诉用户答案：\n\n" + analyses
+                ? "以下是多位专家对同一问题的分析（最后一轮）。"
+                    + "直接输出给用户的答案，不要提专家、不要提共识、不要提这是最后一轮：\n\n" + analyses
                 : "以下是多位专家对同一问题的分析（辩论第" + round + "轮）。请判断专家们是否已达成共识。"
                     + "如果是，直接告诉用户答案。如果还有明显分歧，只需要回复\"CONTINUE\"。\n\n"
                     + "原始问题: " + originalTask + "\n\n" + analyses;
@@ -223,8 +223,8 @@ public class DebateTopologyStrategy implements TeamTopologyStrategy {
             ChatRequest request = ChatRequest.builder()
                     .messages(List.of(
                             ChatMessage.system("你是一个辩论 Moderator。"
-                                    + "如果专家们达成了共识，只需要像客服一样直接告诉用户答案，"
-                                    + "不要评价专家们是否一致。如果还有明显冲突，回复 CONTINUE。"),
+                                    + "重要: 直接输出给用户的最终答案，不要输出任何分析过程、不要提专家、不要提共识。"
+                                    + "就像你自己是客服在回复用户一样。如果专家们还有明显冲突未解决，只回复 CONTINUE。"),
                             ChatMessage.user(prompt)))
                     .temperature(0.1)
                     .build();

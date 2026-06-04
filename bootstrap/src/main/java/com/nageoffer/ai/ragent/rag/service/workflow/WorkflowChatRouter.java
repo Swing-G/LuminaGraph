@@ -168,9 +168,9 @@ public class WorkflowChatRouter {
                     reply = multiAgentReply;
                 }
             }
-            // Skill 匹配提示
+            // Skill 匹配提示（放在回复末尾）
             if (finalSkillKey != null) {
-                reply = "📋 已应用业务知识: 「" + finalSkillKey + "」\n\n" + reply;
+                reply = reply + "\n\n> 📋 已应用 Skill: " + finalSkillKey;
             }
             conversationWorkflowRunService.record(conversationId, userId, workflow, instance, input, buildEntities(identifiers), buildWorkflowRunSummary(instance, reply));
             completeWithAssistantMessage(conversationId, userId, callback, reply);
