@@ -11,11 +11,12 @@ import { cn } from "@/lib/utils";
 import {
   createAgentWorkflow, getAgentWorkflows, getAgentWorkflow, updateAgentWorkflow, deleteAgentWorkflow,
   runAgentWorkflow, getAgentWorkflowInstance, getAgentWorkflowInstances, buildTicketTriageWorkflow,
+  createAgentWorkflowChatOption,
   buildPureReActReasoningWorkflow, buildPlanExecuteReasoningWorkflow, buildLayeredMemoryDemoWorkflow,
   type AgentWorkflow, type AgentWorkflowInstance, type AgentWorkflowNode, type AgentWorkflowEdge,
   type AgentWorkflowCreatePayload, type PageResult
 } from "@/services/workflowService";
-import { buildMultiAgentParallelWorkflow, getAgentTeams, type AgentTeam } from "@/services/multiAgentService";
+import { buildMultiAgentParallelWorkflow, createAgentTeam, getAgentTeams, type AgentTeam } from "@/services/multiAgentService";
 import { getErrorMessage } from "@/utils/error";
 
 // ─── Constants ───────────────────
@@ -123,6 +124,100 @@ export function WorkflowBuilderPage() {
       toast.success("已加载 Workflow");
     } catch (e) { toast.error(getErrorMessage(e)); setEditId(null); }
     finally { setBusy(false); }
+  };
+
+  // ─── 一键创建 Demo 链路 ──────────
+  const createDemoChain = async () => {
+    setBusy(true);
+    try {
+      // 1. 创建 Agent Team
+      const team = await createAgentTeam({
+        name: "VIP工单分析专家组",
+        description: "3个专家从不同角度分析工单问题：账号订阅、支付风控、客户关系",
+        topology: "PARALLEL",
+        maxRounds: 1,
+        mergeStrategy: "SYNTHESIS",
+        agents: [
+          {
+            agentKey: "account_analyst", agentName: "账号与订阅分析师", agentOrder: 1,
+            role: "你是SaaS平台的账号与订阅分析专家。你擅长分析企业客户的账号状态（ACTIVE/SUSPENDED/LOCKED）、订阅计划类型和到期时间，以及自动续费配置是否正确。请基于查询数据给出账号层的根因分析。",
+            goal: "确认账号状态是否正常，订阅是否过期或配置错误",
+            toolNames: ["ticket.account.query"],
+            llmConfig: { strategyType: "PIPELINE", temperature: 0.1 }, memoryStrategy: "CONVERSATION"
+          },
+          {
+            agentKey: "payment_analyst", agentName: "支付与风控分析师", agentOrder: 2,
+            role: "你是支付与风控分析专家。你擅长分析支付失败原因（余额不足/银行卡过期/风控拦截等），解读风控规则触发条件，判断是否需要合规团队加白或客户自助操作。请基于查询数据给出支付层的根因和处理建议。",
+            goal: "定位支付失败根因，判断风控拦截是否合理，给出处理方案",
+            toolNames: ["ticket.account.query", "ticket.query"],
+            llmConfig: { strategyType: "REACT", temperature: 0.2 }, memoryStrategy: "CONVERSATION"
+          },
+          {
+            agentKey: "customer_analyst", agentName: "客户关系与SLA分析师", agentOrder: 3,
+            role: "你是客户成功与SLA管理专家。你擅长分析客户等级（VIP/Enterprise/Standard）对应的服务标准，检查SLA是否达标，判断是否需要升级处理或赔偿。请基于查询数据给出客户关系层面的建议和客服回复话术。",
+            goal: "评估客户影响和紧急程度，给出客服回复话术和SLA合规建议",
+            toolNames: ["ticket.account.query"],
+            llmConfig: { strategyType: "PIPELINE", temperature: 0.2 }, memoryStrategy: "CONVERSATION"
+          }
+        ]
+      });
+      toast.success(`Agent Team「${team.name}」已创建`);
+
+      // 2. 创建 Workflow
+      const wf = await createAgentWorkflow({
+        name: "VIP客户工单全流程处理（Demo）",
+        description: "演示完整链路：MCP数据采集 → 3专家并行会诊 → 质量审核 → 输出。覆盖账号/支付/客户关系三个维度的分析。",
+        workflowType: "vip_demo", harnessType: "FLOW", status: "ENABLED",
+        config: { memoryEnabled: true, memoryStrategyType: "LAYERED" },
+        inputSchema: { type: "object", properties: { question: { type: "string" }, ticketId: { type: "string" }, accountId: { type: "string" } } },
+        outputSchema: { type: "object" },
+        nodes: [
+          {
+            nodeKey: "data_collection", nodeName: "📊 数据采集", nodeType: "ACTION", actionType: "MCP_TOOL", nodeOrder: 1,
+            config: { toolName: "ticket.account.query", inputParameters: ["ticketId", "accountId", "orderId"] }
+          },
+          {
+            nodeKey: "expert_analysis", nodeName: "🤖 专家会诊", nodeType: "ACTION", actionType: "NOOP", nodeOrder: 2,
+            config: { strategyType: "AGENT_TEAM", teamId: team.id }
+          },
+          {
+            nodeKey: "quality_check", nodeName: "✅ 质量审核", nodeType: "EVALUATOR", nodeOrder: 3,
+            config: { evaluatorType: "RULE", targetNodeKey: "expert_analysis",
+              requiredFields: ["totalAgents", "successCount", "agentResults"], minLength: 50, maxReflectionRounds: 0 }
+          },
+          { nodeKey: "end", nodeName: "🏁 结束", nodeType: "END", nodeOrder: 4, config: {} }
+        ],
+        edges: [
+          { sourceNodeKey: "data_collection", targetNodeKey: "expert_analysis", edgeType: "DEFAULT", priority: 1 },
+          { sourceNodeKey: "expert_analysis", targetNodeKey: "quality_check", edgeType: "DEFAULT", priority: 1 },
+          { sourceNodeKey: "quality_check", targetNodeKey: "end", edgeType: "DEFAULT", priority: 1 }
+        ]
+      });
+      toast.success(`Workflow「${wf.name}」已创建`);
+
+      // 3. 创建对话绑定
+      await createAgentWorkflowChatOption({
+        optionKey: "vip_demo", label: "VIP工单全流程 Demo",
+        description: "MCP采集→3专家会诊→审核。演示Agent Team并行分析",
+        workflowId: wf.id, enabled: true, sortOrder: 10,
+        promptPresets: [
+          { title: "续费失败排查", description: "VIP客户反馈自动续费失败", prompt: "我是北京蓝图创新科技有限公司（A10004）。今天我们研发团队用系统提示权限不足过期了，我们明明配置了自动续费（SUB10004），请帮我们查一下怎么回事。" },
+          { title: "权限异常排查", description: "团队集体无法访问系统模块", prompt: "我是深圳矩阵科技有限公司（A10003），今天我们研发团队约30人突然无法访问 DevOps 模块，提示403无权限。账号还没过期，帮我查一下原因。" },
+          { title: "安全事件应急", description: "账号疑遭黑客入侵", prompt: "紧急！我是楚天信息安全（A10008），凌晨发现我们账号有大量异常 API 调用，怀疑被黑客入侵了，账号好像自动冻结了，请帮我确认当前状态。" },
+          { title: "试用升级咨询", description: "试用到期咨询升级方案", prompt: "我是南京星辰网络科技（A10007），我们试用体验版快到期了，团队觉得不错想升级。请问当前试用还剩多久？升级到团队版和企业版分别多少钱？" },
+          { title: "账单争议处理", description: "服务暂停但仍被扣费", prompt: "我是成都天域云计算（A10005），我们的账号被暂停了但账单显示这个月还扣了2999元。服务都没有凭什么扣费？我要解释和退款方案。" }
+        ]
+      });
+      toast.success("对话绑定已创建。在聊天页面选 WORKFLOW 模式 → VIP工单全流程 Demo 即可使用");
+
+      // 加载到编辑器
+      setEditId(wf.id);
+      setWfName(wf.name); setWfDesc(wf.description || ""); setWfType(wf.workflowType); setWfStatus(wf.status);
+      setNodes(wf.nodes || []); setEdges(wf.edges || []);
+      setStep(3);
+    } catch (e) {
+      toast.error(getErrorMessage(e, "创建Demo链路失败"));
+    } finally { setBusy(false); }
   };
 
   // ─── Template ──────────────
@@ -257,6 +352,11 @@ export function WorkflowBuilderPage() {
           <Card>
             <CardHeader><CardTitle>从模板开始</CardTitle></CardHeader>
             <CardContent className="space-y-3">
+              <button onClick={createDemoChain} disabled={busy}
+                className="w-full rounded-xl border-2 border-indigo-400 bg-indigo-50 p-4 text-left hover:bg-indigo-100 transition mb-3">
+                <div className="font-semibold text-indigo-700">🎬 一键创建VIP工单全流程Demo</div>
+                <div className="text-xs text-indigo-500 mt-1">自动创建 Team + Workflow + 对话绑定。3专家并行会诊完整链路</div>
+              </button>
               {[
                 { key: "ticket", label: "工单分析", desc: "MCP查询 → 账号分析 → 验收" },
                 { key: "react", label: "ReAct推理", desc: "ReAct节点 → 验收 → 总结" },
