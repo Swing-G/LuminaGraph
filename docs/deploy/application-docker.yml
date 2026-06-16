@@ -1,0 +1,244 @@
+# ============================================================================
+# 流光 (Ragent) — Docker 部署配置
+# 位置: 服务器 /opt/ragent-config/application.yml
+# 注意: 所有 host 使用 Docker 服务名，不是 localhost
+# ============================================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ragent-bootstrap
+
+  # =========================================================================
+  # PostgreSQL + pgvector
+  # =========================================================================
+  datasource:
+    url: jdbc:postgresql://postgres:5432/ragent
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # =========================================================================
+  # Redis（Docker 独立实例 :6380，和宿主机隔离）
+  # =========================================================================
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: "123456"
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+# ===========================================================================
+# Sa-Token 认证（Redis 存储）
+# ===========================================================================
+sa-token:
+  token-name: satoken
+  timeout: 2592000                             # 30 天
+  active-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: false
+
+# ===========================================================================
+# RocketMQ
+# ===========================================================================
+rocketmq:
+  name-server: rmqnamesrv:9876
+  producer:
+    group: ragent-producer-group
+    send-message-timeout: 10000
+    retry-times-when-send-failed: 3
+
+# ===========================================================================
+# RustFS (S3 兼容文件存储)
+# ===========================================================================
+rustfs:
+  url: http://rustfs:9000
+  access-key-id: rustfsadmin
+  secret-access-key: rustfsadmin
+
+# ===========================================================================
+# Milvus（占位，项目未实际使用，但 Bean 需要配置）
+# ===========================================================================
+milvus:
+  uri: http://localhost:19530
+  token: ""
+
+# ===========================================================================
+# MCP 工具网关 — 连接 MCP Server 发现工具
+# ===========================================================================
+rag:
+  # ---- 向量存储类型: pg (pgvector) / milvus ----
+  vector:
+    type: pg
+
+  mcp:
+    servers:
+      - name: demo-tools
+        url: http://mcp-server:9099
+
+  # =========================================================================
+  # RAG 默认配置
+  # =========================================================================
+  default:
+    chat-model: deepseek-v3
+    embedding-model: bge-m3
+    top-k: 5
+    similarity-threshold: 0.7
+
+  # =========================================================================
+  # 搜索通道配置
+  # =========================================================================
+  search:
+    vector:
+      enabled: true
+    fulltext:
+      enabled: false
+
+  # =========================================================================
+  # Query Rewrite
+  # =========================================================================
+  query-rewrite:
+    enabled: true
+
+  # =========================================================================
+  # 记忆配置
+  # =========================================================================
+  memory:
+    max-conversation-turns: 20
+    summary-threshold-tokens: 4000
+    summary-max-tokens: 600
+
+  # =========================================================================
+  # 知识库调度
+  # =========================================================================
+  knowledge:
+    schedule:
+      min-interval-seconds: 60
+
+  # =========================================================================
+  # 限流
+  # =========================================================================
+  rate-limit:
+    global:
+      enabled: true
+      max-concurrent: 50
+      max-wait-seconds: 20
+      lease-seconds: 600
+      poll-interval-ms: 200
+
+  # =========================================================================
+  # Trace
+  # =========================================================================
+  trace:
+    enabled: true
+
+  # =========================================================================
+  # 信号量
+  # =========================================================================
+  semaphore:
+    enabled: true
+    max-permits: 50
+
+  # =========================================================================
+  # 指引
+  # =========================================================================
+  guidance:
+    enabled: true
+
+# ===========================================================================
+# AI 模型配置 — ⚠️ 按你的 API Key 填写
+# ===========================================================================
+ai:
+  # ---- Provider 定义 ----
+  providers:
+    siliconflow:
+      url: https://api.siliconflow.cn
+      apiKey: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"    # ← 替换为你的 SiliconFlow Key
+    ollama:
+      url: http://host.docker.internal:11434           # 如果 Ollama 在宿主机
+      apiKey: ""
+    bailian:
+      url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      apiKey: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"    # ← 替换为你的 BaiLian Key
+
+  # ---- Chat 模型 ----
+  chat:
+    defaultModel: deepseek-v3
+    candidates:
+      - id: deepseek-v3
+        provider: siliconflow
+        model: Pro/deepseek-ai/DeepSeek-V3
+        priority: 1
+        enabled: true
+      - id: qwen-plus
+        provider: bailian
+        model: qwen-plus
+        priority: 2
+        enabled: true
+
+  # ---- Embedding 模型 ----
+  embedding:
+    defaultModel: bge-m3
+    candidates:
+      - id: bge-m3
+        provider: siliconflow
+        model: BAAI/bge-m3
+        dimension: 1024
+        priority: 1
+        enabled: true
+
+  # ---- Rerank 模型 ----
+  rerank:
+    defaultModel: bge-reranker-v2-m3
+    candidates:
+      - id: bge-reranker-v2-m3
+        provider: siliconflow
+        model: BAAI/bge-reranker-v2-m3
+        priority: 1
+        enabled: true
+
+  # ---- 熔断配置 ----
+  selection:
+    failureThreshold: 2
+    openDurationMs: 30000
+
+  # ---- 流式配置 ----
+  stream:
+    messageChunkSize: 5
+
+# ===========================================================================
+# Demo 模式 & 管理员密码
+# ===========================================================================
+app:
+  demo:
+    enabled: true
+
+ragent:
+  admin:
+    password: admin123                            # ← 修改为你的管理员密码
+
+# ===========================================================================
+# 日志
+# ===========================================================================
+logging:
+  level:
+    com.nageoffer.ai.ragent: INFO
+    org.springframework.web: WARN
