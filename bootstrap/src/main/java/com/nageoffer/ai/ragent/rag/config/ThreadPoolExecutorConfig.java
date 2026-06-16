@@ -234,6 +234,7 @@ public class ThreadPoolExecutorConfig {
      * Agent Team并行执行线程池
      */
     @Bean
+    @org.springframework.context.annotation.Primary
     public Executor agentTeamExecutor() {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 CPU_COUNT,
