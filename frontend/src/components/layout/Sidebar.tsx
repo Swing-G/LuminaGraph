@@ -165,7 +165,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div style={{ fontFamily: sessionTitleFont }}>
-                <p className="text-lg font-semibold tracking-[-0.03em] text-white">流光</p>
+                <p className="text-lg font-semibold tracking-[-0.03em] text-white">LuminaGraph</p>
                 <p className="text-xs text-white/52">让灵感在对话里成形</p>
               </div>
             </div>
@@ -185,7 +185,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-semibold tracking-[0.16em] text-white/45">NEW CHAT</span>
                 <span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] font-semibold text-[#FFE0A3] ring-1 ring-white/10">
-                  流光模式
+                  LuminaGraph 模式
                 </span>
               </div>
               <button

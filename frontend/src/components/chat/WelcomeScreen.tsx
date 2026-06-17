@@ -145,13 +145,13 @@ export function WelcomeScreen() {
           <div className="opacity-0 animate-fade-up" style={{ animationFillMode: "both" }}>
             <div className="inline-flex items-center gap-2 rounded-xl border border-white/60 bg-white/58 px-3 py-2 text-xs font-semibold tracking-[0.18em] text-[#6E5D7B] shadow-[0_14px_34px_rgba(58,43,78,0.08)] backdrop-blur-xl">
               <Orbit className="h-4 w-4 text-[#FF8F70]" />
-              LIU GUANG
+              LUMINAGRAPH
             </div>
             <h1 className="mt-6 max-w-[680px] text-balance font-display text-[clamp(3rem,7vw,6.6rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-[#251C2D]">
               让灵感像光一样流动。
             </h1>
             <p className="mt-6 max-w-[58ch] text-base leading-7 text-[#5F5268] sm:text-lg">
-              流光把检索、推理与表达融进一个轻盈的对话界面，帮你快速归纳资料、推演方案、延展思路，把零散问题整理成清晰答案。
+              LuminaGraph 把检索、推理与表达融进一个轻盈的对话界面，帮你快速归纳资料、推演方案、延展思路，把零散问题整理成清晰答案。
             </p>
           </div>
 

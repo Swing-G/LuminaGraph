@@ -167,7 +167,7 @@ select:focus:not(:focus-visible),
   min-height: 100vh;
 }
 
-.liuguang-toast {
+.luminagraph-toast {
   width: 178px !important;
   min-height: 38px !important;
   gap: 8px !important;
@@ -180,46 +180,46 @@ select:focus:not(:focus-visible),
   padding: 20px 12px !important;
 }
 
-.liuguang-toast-success {
+.luminagraph-toast-success {
   border-color: rgba(244, 162, 97, 0.45) !important;
   background: linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(255, 240, 214, 0.96)) !important;
   color: #21182b !important;
 }
 
-.liuguang-toast-success [data-icon] {
+.luminagraph-toast-success [data-icon] {
   color: #b4533a !important;
 }
 
-.liuguang-toast-error {
+.luminagraph-toast-error {
   border-color: rgba(180, 83, 58, 0.35) !important;
   background: linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(255, 232, 220, 0.96)) !important;
   color: #7f2f1d !important;
 }
 
-.liuguang-toast-error [data-icon] {
+.luminagraph-toast-error [data-icon] {
   color: #b4533a !important;
 }
 
-.liuguang-toast-info,
-.liuguang-toast-warning {
+.luminagraph-toast-info,
+.luminagraph-toast-warning {
   border-color: rgba(139, 124, 255, 0.28) !important;
   background: rgba(255, 253, 248, 0.94) !important;
   color: #21182b !important;
 }
 
-.liuguang-toast-title {
+.luminagraph-toast-title {
   font-size: 13px !important;
   font-weight: 600 !important;
   letter-spacing: -0.02em !important;
   line-height: 18px !important;
 }
 
-.liuguang-toast-description {
+.luminagraph-toast-description {
   color: #756676 !important;
   font-size: 12px !important;
 }
 
-.liuguang-toast-close {
+.luminagraph-toast-close {
   border-color: #e8ddcf !important;
   background: #fff8ef !important;
   color: #6e5b78 !important;

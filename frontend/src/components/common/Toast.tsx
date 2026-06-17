@@ -9,14 +9,14 @@ export function Toast() {
       offset={{ right: 4 }}
       toastOptions={{
         classNames: {
-          toast: "liuguang-toast",
-          success: "liuguang-toast-success",
-          error: "liuguang-toast-error",
-          info: "liuguang-toast-info",
-          warning: "liuguang-toast-warning",
-          title: "liuguang-toast-title",
-          description: "liuguang-toast-description",
-          closeButton: "liuguang-toast-close"
+          toast: "luminagraph-toast",
+          success: "luminagraph-toast-success",
+          error: "luminagraph-toast-error",
+          info: "luminagraph-toast-info",
+          warning: "luminagraph-toast-warning",
+          title: "luminagraph-toast-title",
+          description: "luminagraph-toast-description",
+          closeButton: "luminagraph-toast-close"
         }
       }}
     />

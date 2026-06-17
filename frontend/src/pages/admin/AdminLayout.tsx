@@ -490,10 +490,12 @@ export function AdminLayout() {
       <aside className={cn("admin-sidebar", collapsed && "admin-sidebar--collapsed")}>
         <div className="admin-sidebar__brand">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <div className="admin-sidebar__logo">R</div>
+              <div className="admin-sidebar__logo">
+              <img src="/luminagraph-logo.png" alt="LuminaGraph" className="h-full w-full object-contain rounded-xl" />
+            </div>
             {!collapsed && (
               <div className="min-w-0">
-                <h1 className="admin-sidebar__title">流光</h1>
+                <h1 className="admin-sidebar__title">LuminaGraph</h1>
                 <p className="admin-sidebar__subtitle">AI Agent 编排系统</p>
               </div>
             )}
@@ -750,7 +752,7 @@ export function AdminLayout() {
                 返回聊天
               </Button>
               <a
-                href="https://github.com/Swing-G/LiuGuang"
+                href="https://github.com/Swing-G/LuminaGraph"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 rounded-xl border border-[#E8DDCF] bg-[#FFFDF8] px-3 py-1.5 text-sm text-[#6E5B78] transition hover:bg-[#FFF8EF] hover:text-[#251C2D]"

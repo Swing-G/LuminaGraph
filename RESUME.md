@@ -1,10 +1,10 @@
-# 流光 — AI Agent 编排系统
+# LuminaGraph — AI Agent 编排系统
 
 **全栈开发** · 2026.01 - 2026.06
 
 **项目概述**：面向企业复杂任务场景的 Agent Workflow 与 Multi-Agent 运行时编排系统。以 DAG 工作流为宏观骨架，以多 Agent 协作拓扑为微观执行肌肉，将大模型的非确定性输出约束在可控的结构化执行链路中。应用于私域问答、长工单处理与智能运维等场景。
 
-代码及演示地址：github.com/Swing-G/LiuGuang · liuguangyf.top
+代码及演示地址：github.com/Swing-G/LuminaGraph · liuguangyf.top
 
 **技术栈**：Spring Boot 3.5.7 · PostgreSQL (pgvector) · MCP · Redis · React 18 · TypeScript · MyBatis-Plus · Milvus
 

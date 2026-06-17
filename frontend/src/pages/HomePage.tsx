@@ -64,16 +64,16 @@ export function HomePage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-base font-semibold tracking-[-0.03em]">流光</p>
+              <p className="text-base font-semibold tracking-[-0.03em]">LuminaGraph</p>
               <p className="text-xs text-[#756676]">AI Agent 编排系统</p>
             </div>
           </div>
           <a
-            href="https://github.com/Swing-G/LiuGuang"
+            href="https://github.com/Swing-G/LuminaGraph"
             target="_blank"
             rel="noreferrer"
             className="hidden items-center gap-2 rounded-full border border-[#1F1826]/14 bg-white/70 px-4 py-2.5 text-sm font-medium text-[#1F1826] shadow-[0_12px_28px_rgba(31,24,38,0.08)] transition hover:-translate-y-0.5 hover:bg-white sm:inline-flex"
-            aria-label="打开流光 GitHub 仓库"
+            aria-label="打开 LuminaGraph GitHub 仓库"
           >
             <Github className="h-4 w-4" />
             GitHub
@@ -90,7 +90,7 @@ export function HomePage() {
               把复杂任务编排成光。
             </h1>
             <p className="mt-7 max-w-[62ch] text-lg leading-8 text-[#51465A]">
-              流光面向企业复杂任务场景，为大模型提供可控执行链路。通过任务拆解、状态驱动执行、多阶段校验与工具编排，支撑私域问答、长工单处理和智能运维。
+              LuminaGraph 面向企业复杂任务场景，为大模型提供可控执行链路。通过任务拆解、状态驱动执行、多阶段校验与工具编排，支撑私域问答、长工单处理和智能运维。
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <button

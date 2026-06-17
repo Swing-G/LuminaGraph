@@ -45,7 +45,7 @@ export function Header({ isSidebarCollapsed, onToggleSidebar }: HeaderProps) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-[-0.02em] text-[#251C2D] sm:text-base">
-              {currentSession?.title || "流光对话"}
+              {currentSession?.title || "LuminaGraph 对话"}
             </p>
             <p className="mt-0.5 hidden text-xs text-[#7B6B83] sm:block">
               捕捉问题中的微光，整理成清晰可用的答案

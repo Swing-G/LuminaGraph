@@ -1,4 +1,4 @@
-# 流光 (Ragent) — 服务器部署手册
+# LuminaGraph (Ragent) — 服务器部署手册
 
 > 服务器: 117.72.216.56 / Ubuntu 22.04 / 8GB / 2核  
 > 仓库: https://github.com/Swing-G/LuminaGraph  
@@ -149,7 +149,7 @@ curl -s http://localhost:9003/ | head -5          # 应返回页面
 ```
 
 浏览器访问：
-- **流光前端**: `http://117.72.216.56:81`
+- **LuminaGraph 前端**: `http://117.72.216.56:81`
 - **管理后台**: `http://117.72.216.56:81/admin`
 - **RocketMQ Dashboard**: `http://117.72.216.56:8082`
 - **RustFS Console**: `http://117.72.216.56:9003`

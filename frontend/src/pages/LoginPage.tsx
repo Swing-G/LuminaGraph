@@ -88,7 +88,7 @@ export function LoginPage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-base font-semibold tracking-[-0.03em]">流光</p>
+              <p className="text-base font-semibold tracking-[-0.03em]">LuminaGraph</p>
               <p className="text-xs text-[#756676]">AI Agent 编排系统</p>
             </div>
           </button>
@@ -105,7 +105,7 @@ export function LoginPage() {
           <div className="hidden lg:block">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1F1826]/10 bg-white/62 px-3 py-2 text-xs font-semibold tracking-[0.18em] text-[#6E5B78] shadow-[0_10px_24px_rgba(31,24,38,0.06)]">
               <span className="h-2 w-2 rounded-full bg-[#E96F4B]" />
-              LIUGUANG ACCESS
+              LUMINAGRAPH ACCESS
             </div>
             <h1 className="mt-7 max-w-[680px] text-balance text-[clamp(3.2rem,7vw,6.4rem)] font-semibold leading-[0.88] tracking-[-0.078em] text-[#21182B]">
               进入你的编排轨道。
@@ -130,7 +130,7 @@ export function LoginPage() {
                     {isRegister ? "创建账号" : "欢迎回来"}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[#756676]">
-                    {isRegister ? "注册后自动进入流光对话空间。" : "登录后继续你的 Agent 编排会话。"}
+                    {isRegister ? "注册后自动进入 LuminaGraph 对话空间。" : "登录后继续你的 Agent 编排会话。"}
                   </p>
                 </div>
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#21182B] text-[#FFF8EF] shadow-[0_12px_28px_rgba(31,24,38,0.18)]">

@@ -1,14 +1,14 @@
-<!-- <p align="center">
+<p align="center">
   <a href="https://github.com/Swing-G/LuminaGraph">
     <picture>
-      <source srcset="assets/ragent-ai-banner.png">
-      <img src="assets/ragent-ai-banner.png" alt="LiuGuang - Multi-Agent Orchestration">
+      <source srcset="assets/luminagraph-logo.png">
+      <img src="assets/luminagraph-logo.png" alt="LuminaGraph - Multi-Agent Orchestration" width="200">
     </picture>
   </a>
-</p> -->
+</p>
 
 <p align="center">
-  <strong>流光 — Multi-Agent 工作流编排系统</strong><br/>
+  <strong>LuminaGraph — Multi-Agent 工作流编排系统</strong><br/>
   <sub>Workflow DAG × 4 协作拓扑 × 结构化 Skill × 自进化闭环</sub>
 </p>
 

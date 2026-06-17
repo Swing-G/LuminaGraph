@@ -207,10 +207,10 @@ export function MessageList({ messages, isLoading, isStreaming, sessionKey }: Me
             <span className="h-2.5 w-2.5 rounded-full bg-[#F4A261]" />
           </div>
           <h2 className="mt-5 text-2xl font-semibold tracking-[-0.04em] text-[#21182B] sm:text-3xl">
-            开始你的流光对话
+            开始你的 LuminaGraph 对话
           </h2>
           <p className="mt-3 text-sm leading-6 text-[#6D6170] sm:text-base">
-            在下方输入问题，流光会帮你归纳、追问、推演，并把复杂信息整理成清晰答案。
+            在下方输入问题，LuminaGraph 会帮你归纳、追问、推演，并把复杂信息整理成清晰答案。
           </p>
         </div>
       </div>
